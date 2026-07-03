@@ -169,7 +169,9 @@ jobs:
             -DENABLE_VIDEO=YES `
             -DENABLE_APP_PACKAGING=${{ github.event.inputs.enable_packaging == 'true' && 'YES' || 'NO' }} `
             -DENABLE_WINDOWS_TOOLS_CHECK=ON `
-            -DENABLE_BUILD_VERBOSE=ON
+            -DENABLE_BUILD_VERBOSE=ON `
+            -DENABLE_AV1=OFF `
+            -DENABLE_UNIT_TESTS=OFF
 
       # ─────────────────────────────────────────────
       # 11. Build
