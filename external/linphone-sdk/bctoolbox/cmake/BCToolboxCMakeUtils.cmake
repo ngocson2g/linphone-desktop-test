@@ -141,8 +141,13 @@ function(bc_compute_full_version OUTPUT_VERSION)
 			WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 		)
 		if(NOT GIT_DESCRIBE_STATUS EQUAL 0)
-			message(WARNING "fail to get GIT describe version, falling back to 5.3.0")
-			set(GIT_DESCRIBE_VERSION "5.3.0")
+			if (PROJECT_VERSION)
+				message(WARNING "fail to get GIT describe version, falling back to PROJECT_VERSION (${PROJECT_VERSION})")
+				set(GIT_DESCRIBE_VERSION "${PROJECT_VERSION}")
+			else()
+				message(WARNING "fail to get GIT describe version, falling back to 5.3.0")
+				set(GIT_DESCRIBE_VERSION "5.3.0")
+			endif()
 		endif()
 
 		# parse git describe version
