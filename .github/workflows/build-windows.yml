@@ -27,7 +27,7 @@ on:
         type: boolean
 
 env:
-  QT_VERSION: '6.10.0'
+  QT_VERSION: '6.7.2'
   BUILD_TYPE: ${{ github.event.inputs.build_type || 'RelWithDebInfo' }}
   PARALLEL_JOBS: 4
   # Disable crash handler to simplify CI build (requires extra Google tools)
