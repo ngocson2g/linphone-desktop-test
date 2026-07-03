@@ -41,12 +41,13 @@ jobs:
 
     steps:
       # ─────────────────────────────────────────────
-      # 1. Checkout source code with submodules
+      # 1. Checkout source code
+      #    (submodule content is committed as regular 
+      #     files — no need for submodules: recursive)
       # ─────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          submodules: recursive
           fetch-depth: 0
 
       # ─────────────────────────────────────────────

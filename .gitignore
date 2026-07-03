@@ -48,6 +48,7 @@ linphone.spec
 !.gitignore
 !.gitlab-ci*
 !.gitmodules
+!.github
 
 # VSCode
 linphone60*.log
