@@ -122,22 +122,13 @@ else()
     message(STATUS "Archive found for RNNoise")
 endif()
 # Verify checksum of archive
-if(WIN32)
-    # On Windows use PowerShell
-    execute_process(
-        COMMAND powershell -Command "Get-FileHash -Algorithm SHA256 '${MODEL_TAR_PATH}' | Select-Object -ExpandProperty Hash"
-        OUTPUT_VARIABLE ACTUAL_CHECKSUM
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    string(TOLOWER "${ACTUAL_CHECKSUM}" ACTUAL_CHECKSUM)
-else()
-    execute_process(
-        COMMAND sha256sum "${MODEL_TAR_PATH}"
-        OUTPUT_VARIABLE CHECKSUM_OUTPUT
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    string(REGEX REPLACE "([^ ]+).*$" "\\1" ACTUAL_CHECKSUM "${CHECKSUM_OUTPUT}")
-endif()
+execute_process(
+    COMMAND ${CMAKE_COMMAND} -E sha256sum "${MODEL_TAR_PATH}"
+    OUTPUT_VARIABLE CHECKSUM_OUTPUT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(REGEX REPLACE "^([a-fA-F0-9]+).*$" "\\1" ACTUAL_CHECKSUM "${CHECKSUM_OUTPUT}")
+string(TOLOWER "${ACTUAL_CHECKSUM}" ACTUAL_CHECKSUM)
 # Compare checksum with hash
 if(NOT "${ACTUAL_CHECKSUM}" STREQUAL "${MODEL_HASH}")
     message(STATUS "Checksums do not match for ${MODEL_TAR_PATH}. Deleting the file...")
