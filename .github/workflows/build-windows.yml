@@ -1,0 +1,211 @@
+################################################################################
+#
+#  GitHub Actions: Build Linphone Desktop for Windows x64
+#
+#  Based on the official GitLab CI (.gitlab-ci-files/windows-desktop.yml)
+#  Adapted for GitHub Actions with windows-latest runner + VS 2022
+#
+################################################################################
+
+name: Build Windows Desktop
+
+on:
+  push:
+    branches: [ master, main, 'release/**' ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type (RelWithDebInfo, Debug, Release)'
+        required: false
+        default: 'RelWithDebInfo'
+      enable_packaging:
+        description: 'Enable packaging (creates installer)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  QT_VERSION: '6.10.0'
+  BUILD_TYPE: ${{ github.event.inputs.build_type || 'RelWithDebInfo' }}
+  PARALLEL_JOBS: 4
+  # Disable crash handler to simplify CI build (requires extra Google tools)
+  ENABLE_CRASH_HANDLER: 'OFF'
+
+jobs:
+  build-windows:
+    name: Windows x64 - VS2022 + Ninja
+    runs-on: windows-2022
+    timeout-minutes: 240  # Build SDK can take a long time
+
+    steps:
+      # ─────────────────────────────────────────────
+      # 1. Checkout source code with submodules
+      # ─────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # ─────────────────────────────────────────────
+      # 2. Setup MSYS2 (provides MinGW toolchain, 
+      #    nasm, yasm, perl, python packages)
+      # ─────────────────────────────────────────────
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            base-devel
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-nasm
+            mingw-w64-x86_64-yasm
+            python3
+            python3-pip
+            perl
+            doxygen
+            gawk
+            bzip2
+            patch
+            pkg-config
+
+      # ─────────────────────────────────────────────
+      # 3. Install Python dependencies
+      # ─────────────────────────────────────────────
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pystache six
+
+      # ─────────────────────────────────────────────
+      # 4. Install Qt6 via aqtinstall
+      # ─────────────────────────────────────────────
+      - name: Cache Qt
+        id: cache-qt
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/Qt
+          key: qt-${{ env.QT_VERSION }}-windows-msvc2022-x64
+
+      - name: Install Qt6
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          python -m pip install aqtinstall
+          python -m aqt install-qt windows desktop ${{ env.QT_VERSION }} win64_msvc2022_64 `
+            --outputdir "${{ github.workspace }}/Qt" `
+            --modules qtnetworkauth qtshadertools
+
+      # ─────────────────────────────────────────────
+      # 5. Setup Visual Studio environment
+      # ─────────────────────────────────────────────
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      # ─────────────────────────────────────────────
+      # 6. Setup Ninja build system
+      # ─────────────────────────────────────────────
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      # ─────────────────────────────────────────────
+      # 7. Add MSYS2 to PATH (for nasm, yasm, perl)
+      # ─────────────────────────────────────────────
+      - name: Configure PATH
+        run: |
+          echo "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      # ─────────────────────────────────────────────
+      # 8. Set Qt6 environment variables
+      # ─────────────────────────────────────────────
+      - name: Set Qt6 environment
+        run: |
+          $QT_DIR = "${{ github.workspace }}\Qt\${{ env.QT_VERSION }}\msvc2022_64"
+          echo "Qt6_DIR=$QT_DIR\lib\cmake\Qt6" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "$QT_DIR\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "CMAKE_PREFIX_PATH=$QT_DIR" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      # ─────────────────────────────────────────────
+      # 9. Cache build (ccache / sccache)
+      # ─────────────────────────────────────────────
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/external/linphone-sdk
+          key: linphone-sdk-win64-${{ hashFiles('external/linphone-sdk/CMakeLists.txt') }}-${{ env.BUILD_TYPE }}
+          restore-keys: |
+            linphone-sdk-win64-
+
+      # ─────────────────────────────────────────────
+      # 10. CMake Configure
+      # ─────────────────────────────────────────────
+      - name: CMake Configure
+        run: |
+          if (Test-Path build) { Remove-Item -Recurse -Force build }
+          New-Item -ItemType Directory -Force -Path build
+          cd build
+          cmake .. `
+            -G "Ninja" `
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} `
+            -DCMAKE_BUILD_PARALLEL_LEVEL=${{ env.PARALLEL_JOBS }} `
+            -DCMAKE_C_COMPILER=cl.exe `
+            -DCMAKE_CXX_COMPILER=cl.exe `
+            -DCMAKE_RC_COMPILER=rc.exe `
+            -DENABLE_CRASH_HANDLER=${{ env.ENABLE_CRASH_HANDLER }} `
+            -DENABLE_NON_FREE_CODECS=YES `
+            -DENABLE_OPENH264=YES `
+            -DENABLE_VIDEO=YES `
+            -DENABLE_APP_PACKAGING=${{ github.event.inputs.enable_packaging == 'true' && 'YES' || 'NO' }} `
+            -DENABLE_WINDOWS_TOOLS_CHECK=ON `
+            -DENABLE_BUILD_VERBOSE=ON
+
+      # ─────────────────────────────────────────────
+      # 11. Build
+      # ─────────────────────────────────────────────
+      - name: Build
+        run: |
+          cd build
+          cmake --build . --target install --parallel ${{ env.PARALLEL_JOBS }} --config ${{ env.BUILD_TYPE }}
+
+      # ─────────────────────────────────────────────
+      # 12. Upload build artifacts
+      # ─────────────────────────────────────────────
+      - name: Upload build output
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linphone-desktop-win64-${{ env.BUILD_TYPE }}
+          path: build/OUTPUT/
+          retention-days: 14
+
+      # ─────────────────────────────────────────────
+      # 13. Upload installer (if packaging enabled)
+      # ─────────────────────────────────────────────
+      - name: Upload installer
+        if: success() && github.event.inputs.enable_packaging == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linphone-installer-win64
+          path: build/OUTPUT/Packages/*.exe
+          retention-days: 30
+
+      # ─────────────────────────────────────────────
+      # 14. Upload build logs on failure
+      # ─────────────────────────────────────────────
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-win64
+          path: |
+            build/ninja_buildlog.txt
+            build/CMakeCache.txt
+            build/CMakeFiles/CMakeOutput.log
+            build/CMakeFiles/CMakeError.log
+          retention-days: 7
