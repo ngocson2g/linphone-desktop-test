@@ -77,7 +77,11 @@ execute_process(
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/external/linphone-sdk
     OUTPUT_VARIABLE LINPHONESDK_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
 )
+if(NOT LINPHONESDK_VERSION)
+    set(LINPHONESDK_VERSION "5.3.0")
+endif()
 
 include(application_info.cmake)
 string(TIMESTAMP CURRENT_YEAR "%Y")
