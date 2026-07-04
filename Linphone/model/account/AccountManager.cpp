@@ -125,6 +125,9 @@ bool AccountManager::login(QString username,
 	}
 
 	if (!registrarUri.isEmpty()) {
+		if (!registrarUri.startsWith("sip:", Qt::CaseInsensitive) && !registrarUri.startsWith("sips:", Qt::CaseInsensitive)) {
+			registrarUri.prepend("sip:");
+		}
 		auto linRegistrarUri = factory->createAddress(Utils::appStringToCoreString(registrarUri));
 		if (linRegistrarUri) params->setServerAddress(linRegistrarUri);
 		else {
@@ -136,6 +139,9 @@ bool AccountManager::login(QString username,
 	}
 
 	if (!outboundProxyAddress.isEmpty()) {
+		if (!outboundProxyAddress.startsWith("sip:", Qt::CaseInsensitive) && !outboundProxyAddress.startsWith("sips:", Qt::CaseInsensitive)) {
+			outboundProxyAddress.prepend("sip:");
+		}
 		auto linOutboundProxyAddress = factory->createAddress(Utils::appStringToCoreString(outboundProxyAddress));
 		if (linOutboundProxyAddress) params->setRoutesAddresses({linOutboundProxyAddress});
 		else {

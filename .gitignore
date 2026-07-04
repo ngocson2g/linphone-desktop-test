@@ -8,15 +8,14 @@
 
 *.pro.user
 Project.sln.lnk
-WORK
-OUTPUT
-Makefile
+/WORK
+/OUTPUT
+/Makefile
 CMakeLists.txt.user
-build*
+/build/
 build-*-Debug
 build-*-Default
 prepare.conf.user
-build/*
 
 # Tags -------------------------------------------------------------------------
 
