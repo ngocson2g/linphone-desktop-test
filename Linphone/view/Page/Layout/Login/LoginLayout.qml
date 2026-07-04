@@ -15,7 +15,9 @@ Rectangle {
 	id: mainItem
 	property alias titleContent : titleLayout.children
 	property alias centerContent : centerLayout.children
-	color: DefaultStyle.grey_0
+	property color backgroundColor: DefaultStyle.grey_0
+	property bool showMountains: true
+	color: backgroundColor
 
 	component AboutLine: RowLayout {
 		id: line
@@ -163,6 +165,7 @@ Rectangle {
 		}
 		Image {
 			id: bottomMountains
+			visible: mainItem.showMountains
 			source: AppIcons.belledonne
 			fillMode: Image.Stretch
 			Layout.fillWidth: true

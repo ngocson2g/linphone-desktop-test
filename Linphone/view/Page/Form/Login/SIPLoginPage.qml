@@ -6,74 +6,126 @@ import ConstantsCpp
 import SettingsCpp
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
+import "qrc:/qt/qml/Linphone/view/Control/Button/"
+
 
 LoginLayout {
 	id: mainItem
 	signal goBack()
 	signal goToRegister()
 	property bool showBackButton: false
-	
+
+	backgroundColor: "#08101a"
+	showMountains: false
+
+	Canvas {
+		id: networkCanvas
+		parent: mainItem
+		anchors.fill: parent
+		z: -2
+
+		property var nodes: []
+		property int numNodes: 50
+		property real maxDistance: Utils.getSizeWithScreenRatio(150)
+
+		onPaint: {
+			var ctx = getContext("2d");
+			ctx.clearRect(0, 0, width, height);
+			ctx.lineWidth = 1;
+			for (var i = 0; i < numNodes; i++) {
+				var node = nodes[i];
+				node.x += node.vx;
+				node.y += node.vy;
+				if (node.x <= 0 || node.x >= width) node.vx *= -1;
+				if (node.y <= 0 || node.y >= height) node.vy *= -1;
+				
+				ctx.beginPath();
+				ctx.arc(node.x, node.y, 2, 0, 2 * Math.PI);
+				ctx.fillStyle = "rgba(100, 150, 255, 0.6)";
+				ctx.fill();
+				
+				for (var j = i + 1; j < numNodes; j++) {
+					var otherNode = nodes[j];
+					var dx = node.x - otherNode.x;
+					var dy = node.y - otherNode.y;
+					var dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist < maxDistance) {
+						ctx.beginPath();
+						ctx.moveTo(node.x, node.y);
+						ctx.lineTo(otherNode.x, otherNode.y);
+						var opacity = (1.0 - (dist / maxDistance)) * 0.4;
+						ctx.strokeStyle = "rgba(100, 150, 255, " + opacity + ")";
+						ctx.stroke();
+					}
+				}
+			}
+		}
+
+		Component.onCompleted: {
+			for (var i = 0; i < numNodes; i++) {
+				nodes.push({
+					x: Math.random() * 1000,
+					y: Math.random() * 800,
+					vx: (Math.random() - 0.5) * 1,
+					vy: (Math.random() - 0.5) * 1
+				});
+			}
+		}
+
+		Timer {
+			interval: 33
+			running: true
+			repeat: true
+			onTriggered: networkCanvas.requestPaint()
+		}
+	}
+
 	titleContent: [
 		RowLayout {
-            Layout.leftMargin: Utils.getSizeWithScreenRatio(119)
-			visible: !SettingsCpp.assistantHideThirdPartyAccount
-            spacing: Utils.getSizeWithScreenRatio(21)
+			Layout.leftMargin: Utils.getSizeWithScreenRatio(119)
+			spacing: Utils.getSizeWithScreenRatio(21)
 			Button {
 				id: backButton
 				visible: mainItem.showBackButton 
-                Layout.preferredHeight: Utils.getSizeWithScreenRatio(24)
-                Layout.preferredWidth: Utils.getSizeWithScreenRatio(24)
+				Layout.preferredHeight: Utils.getSizeWithScreenRatio(24)
+				Layout.preferredWidth: Utils.getSizeWithScreenRatio(24)
 				icon.source: AppIcons.leftArrow
 				style: ButtonStyle.noBackground
-				onClicked: {
-					console.debug("[SIPLoginPage] User: return")
-					mainItem.goBack()
-				}
-				//: Return
-				Accessible.name: qsTr("return_accessible_name")
+				onClicked: { mainItem.goBack() }
 			}
-			EffectImage {
-				fillMode: Image.PreserveAspectFit
-				imageSource: AppIcons.profile
-                Layout.preferredHeight: Utils.getSizeWithScreenRatio(34)
-                Layout.preferredWidth: Utils.getSizeWithScreenRatio(34)
-				colorizationColor: DefaultStyle.main2_600
-			}
-			Text {
-                //: Compte SIP tiers
-                text: qsTr("assistant_login_third_party_sip_account_title")
-				font {
-                    pixelSize: Typography.h1.pixelSize
-                    weight: Typography.h1.weight
+			ColumnLayout {
+				spacing: 2
+				Text {
+					text: "Add new SIP account"
+					color: DefaultStyle.grey_0
+					font {
+						pixelSize: Typography.h1.pixelSize
+						weight: Typography.h1.weight
+					}
+					scaleLettersFactor: 1.1
 				}
-				scaleLettersFactor: 1.1
+				Text {
+					text: "don't have, take one from <a href='https://voip.com.vn' style='color:#55aaff;text-decoration:none;'>ZLINK</a>"
+					color: DefaultStyle.grey_0
+					font {
+						pixelSize: Typography.p1.pixelSize
+						weight: Typography.p1.weight
+					}
+					onLinkActivated: function(link) { Qt.openUrlExternally(link) }
+				}
 			}
 		},
 		Item {
 			Layout.fillWidth: true
 		},
 		RowLayout {
-			visible: !SettingsCpp.assistantHideCreateAccount
-            Layout.rightMargin: Utils.getSizeWithScreenRatio(51)
-            spacing: Utils.getSizeWithScreenRatio(20)
-			Text {
-                Layout.rightMargin: Utils.getSizeWithScreenRatio(15)
-                //: Pas encore de compte ?
-                text: qsTr("assistant_no_account_yet")
-				font {
-                    pixelSize: Typography.p1.pixelSize
-                    weight: Typography.p1.weight
-				}
-			}
+			Layout.rightMargin: Utils.getSizeWithScreenRatio(51)
+			spacing: Utils.getSizeWithScreenRatio(20)
 			BigButton {
 				Layout.alignment: Qt.AlignRight
-                //: S'inscrire
-                text: qsTr("assistant_account_register")
+				text: qsTr("Login")
 				style: ButtonStyle.main
-				onClicked: {
-					console.debug("[SIPLoginPage] User: go to register page")
-					mainItem.goToRegister()
-				}
+				onClicked: { mainItem.goToRegister() }
 			}
 		}
 	]
@@ -87,89 +139,72 @@ LoginLayout {
 			clip: true
 			flickableDirection: Flickable.VerticalFlick
 
-            Control.ScrollBar.vertical: scrollbar
+			Control.ScrollBar.vertical: scrollbar
 
 			ColumnLayout {
-                id: content
-                // rightMargin is negative margin
-                width: parent.width - scrollbar.width*2
-                spacing: Utils.getSizeWithScreenRatio(85)
+				id: content
+				width: parent.width - scrollbar.width*2
+				spacing: Utils.getSizeWithScreenRatio(85)
 				ColumnLayout {
 					spacing: 0
 					ColumnLayout {
-                        spacing: Utils.getSizeWithScreenRatio(28)
+						spacing: Utils.getSizeWithScreenRatio(28)
 						Text {
 							Layout.fillWidth: true
-							Layout.preferredWidth: rootStackView.width
 							wrapMode: Text.WordWrap
-							color: DefaultStyle.main2_900
+							color: DefaultStyle.grey_0
 							font {
-                                pixelSize: Typography.p1.pixelSize
-                                weight: Typography.p1.weight
+								pixelSize: Typography.p1.pixelSize
+								weight: Typography.p1.weight
 							}
-                            text: qsTr("Certaines fonctionnalités telles que les conversations de groupe, les vidéo-conférences, etc… nécessitent un compte %1.\n\nCes fonctionnalités seront masquées si vous utilisez un compte SIP tiers.\n\nPour les activer dans un projet commercial, merci de nous contacter.").arg(applicationName)
+							text: qsTr("Certaines fonctionnalités telles que les conversations de groupe, les vidéo-conférences, etc… nécessitent un compte %1.\n\nCes fonctionnalités seront masquées si vous utilisez un compte SIP tiers.\n\nPour les activer dans un projet commercial, merci de nous contacter.").arg(applicationName)
 						}
 					}
 					SmallButton {
 						id: openLinkButton
 						Layout.alignment: Qt.AlignCenter
-                        Layout.topMargin: Utils.getSizeWithScreenRatio(18)
+						Layout.topMargin: Utils.getSizeWithScreenRatio(18)
 						text: "linphone.org/contact"
 						style: ButtonStyle.secondary
-						onClicked: {
-							Qt.openUrlExternally(ConstantsCpp.ContactUrl)
-						}
-						KeyNavigation.up: backButton
-						KeyNavigation.down: createAccountButton
+						onClicked: { Qt.openUrlExternally(ConstantsCpp.ContactUrl) }
 					}
 				}
 				ColumnLayout {
-                    spacing: Utils.getSizeWithScreenRatio(20)
+					spacing: Utils.getSizeWithScreenRatio(20)
 					BigButton {
 						id: createAccountButton
 						style: ButtonStyle.secondary
 						Layout.fillWidth: true
-                        //: "Créer un compte linphone"
-                        text: qsTr("assistant_third_party_sip_account_create_linphone_account")
-						onClicked: {
-							console.debug("[SIPLoginPage] User: click register")
-							mainItem.goToRegister()
-						}
-						KeyNavigation.up: openLinkButton
-						KeyNavigation.down: continueButton
+						text: qsTr("assistant_third_party_sip_account_create_linphone_account")
+						onClicked: { mainItem.goToRegister() }
 					}
 					BigButton {
 						id: continueButton
 						Layout.fillWidth: true
-                        //: "Je comprends"
-                        text: qsTr("assistant_third_party_sip_account_warning_ok")
+						text: qsTr("assistant_third_party_sip_account_warning_ok")
 						style: ButtonStyle.main
-						onClicked: {
-							rootStackView.replace(secondItem)
-						}
-						KeyNavigation.up: createAccountButton
+						onClicked: { rootStackView.replace(secondItem) }
 					}
 				}
-				Item {
-					Layout.fillHeight: true
-				}
+				Item { Layout.fillHeight: true }
 			}
 		}
 	}
+	
 	Component {
 		id: secondItem
 		Flickable {
-            id: formFlickable
+			id: formFlickable
 			width: Utils.getSizeWithScreenRatio(770)
-			contentWidth: content.implicitWidth
-			contentHeight: content.implicitHeight
+			contentWidth: contentForm.implicitWidth
+			contentHeight: contentForm.implicitHeight
 			clip: true
 			flickableDirection: Flickable.VerticalFlick
 
-            Control.ScrollBar.vertical: scrollbar
+			Control.ScrollBar.vertical: scrollbar
 
 			RowLayout {
-				id: content
+				id: contentForm
 				width: formFlickable.width - scrollbar.width*2
 				spacing: Utils.getSizeWithScreenRatio(50)
 				ColumnLayout {
@@ -178,16 +213,21 @@ LoginLayout {
 					Layout.fillHeight: true
 					ColumnLayout {
 						spacing: Utils.getSizeWithScreenRatio(22)
-						// alignment item
-						Item {
-							Layout.preferredHeight: advancedParametersTitle.implicitHeight
-						}
 						ColumnLayout {
 							spacing: Utils.getSizeWithScreenRatio(10)
 							FormItemLayout {
+								id: displayName
+								label: "<font color='white'>" + qsTr("sip_address_display_name") + "</font>"
+								Layout.fillWidth: true
+								contentItem: TextField {
+									id: displayNameEdit
+									width: parent.width
+									KeyNavigation.down: usernameEdit
+								}
+							}
+							FormItemLayout {
 								id: username
-								//: "Nom d'utilisateur"
-								label: qsTr("username")
+								label: "<font color='white'>" + qsTr("username") + "</font>"
 								mandatory: true
 								enableErrorText: true
 								Layout.fillWidth: true
@@ -195,14 +235,13 @@ LoginLayout {
 									id: usernameEdit
 									isError: username.errorTextVisible || (LoginPageCpp.badIds && errorText.isVisible)
 									width: parent.width
+									KeyNavigation.up: displayNameEdit
 									KeyNavigation.down: passwordEdit
-									//: "%1 mandatory"
-									Accessible.name: qsTr("mandatory_field_accessible_name").arg(qsTr("username"))
 								}
 							}
 							FormItemLayout {
 								id: password
-								label: qsTr("password")
+								label: "<font color='white'>" + qsTr("password") + "</font>"
 								mandatory: true
 								enableErrorText: true
 								Layout.fillWidth: true
@@ -212,15 +251,23 @@ LoginLayout {
 									hidden: true
 									width: parent.width
 									KeyNavigation.up: usernameEdit
+									KeyNavigation.down: connectionIdEdit
+								}
+							}
+							FormItemLayout {
+								id: connectionId
+								label: "<font color='white'>" + qsTr("login_id") + "</font>"
+								Layout.fillWidth: true
+								contentItem: TextField {
+									id: connectionIdEdit
+									width: parent.width
+									KeyNavigation.up: passwordEdit
 									KeyNavigation.down: domainEdit
-									Accessible.name: qsTr("password")
 								}
 							}
 							FormItemLayout {
 								id: domain
-								//: "Domaine"
-								label: qsTr("sip_address_domain")
-								//: "Domaine de votre identité SIP (ex: sip.example.com)"
+								label: "<font color='white'>" + qsTr("sip_address_domain") + "</font>"
 								tooltip: qsTr("sip_address_domain_tooltip")
 								mandatory: true
 								enableErrorText: true
@@ -231,10 +278,7 @@ LoginLayout {
 									isError: domain.errorTextVisible
 									initialText: SettingsCpp.assistantThirdPartySipAccountDomain
 									width: parent.width
-									KeyNavigation.up: passwordEdit
-									KeyNavigation.down: displayName
-									//: "%1 mandatory"
-									Accessible.name: qsTr("mandatory_field_accessible_name").arg(qsTr("sip_address_domain"))
+									KeyNavigation.up: connectionIdEdit
 								}
 								Connections {
 									target: SettingsCpp
@@ -243,41 +287,27 @@ LoginLayout {
 									}
 								}
 							}
-							FormItemLayout {
-								//: Nom d'affichage
-								label: qsTr("sip_address_display_name")
-								Layout.fillWidth: true
-								contentItem: TextField {
-									id: displayName
-									width: parent.width
-									KeyNavigation.up: domainEdit
-									KeyNavigation.down: transportCbox
-									Accessible.name: qsTr("sip_address_display_name")
-								}
+							
+							// Hidden fields to keep API compatible
+							ComboBox {
+								id: transportCbox
+								visible: false
+								textRole: "text"
+								valueRole: "value"
+								model: [
+									{text: "TCP", value: LinphoneEnums.TransportType.Tcp},
+									{text: "UDP", value: LinphoneEnums.TransportType.Udp},
+									{text: "TLS", value: LinphoneEnums.TransportType.Tls},
+									{text: "DTLS", value: LinphoneEnums.TransportType.Dtls}
+								]
+								currentIndex: Utils.findIndex(model, function (entry) {
+									return entry.text === SettingsCpp.assistantThirdPartySipAccountTransport.toUpperCase()
+								})
 							}
-							FormItemLayout {
-								//: "Transport"
-								label: qsTr("transport")
-								Layout.fillWidth: true
-								contentItem: ComboBox {
-									id: transportCbox
-									height: Utils.getSizeWithScreenRatio(49)
-									width: parent.width
-									textRole: "text"
-									valueRole: "value"
-									model: [
-										{text: "TCP", value: LinphoneEnums.TransportType.Tcp},
-										{text: "UDP", value: LinphoneEnums.TransportType.Udp},
-										{text: "TLS", value: LinphoneEnums.TransportType.Tls},
-										{text: "DTLS", value: LinphoneEnums.TransportType.Dtls}
-									]
-									currentIndex: Utils.findIndex(model, function (entry) {
-										return entry.text === SettingsCpp.assistantThirdPartySipAccountTransport.toUpperCase()
-									})
-									KeyNavigation.up: displayName
-									KeyNavigation.down: outboundProxyUriEdit
-									accessibleLabel: qsTr("transport")
-								}
+							TextField {
+								id: registrarUriEdit
+								visible: false
+								text: ""
 							}
 						}
 					}
@@ -298,15 +328,13 @@ LoginLayout {
 						Layout.topMargin: Utils.getSizeWithScreenRatio(15)
 						style: ButtonStyle.main
 						property Item tabTarget
-						Accessible.name: qsTr("assistant_account_login")
 						contentItem: StackLayout {
 							id: connectionButtonContent
 							currentIndex: 0
 							Text {
-								text: qsTr("assistant_account_login")
+								text: qsTr("Login")
 								horizontalAlignment: Text.AlignHCenter
 								verticalAlignment: Text.AlignVCenter
-
 								font {
 									pixelSize: Typography.b1.pixelSize
 									weight: Typography.b1.weight
@@ -346,8 +374,6 @@ LoginLayout {
 							loginDelay.restart()
 						}
 						onPressed: trigger()
-						KeyNavigation.up: connectionId
-						KeyNavigation.tab: tabTarget
 						Timer{
 							id: loginDelay
 							interval: 200
@@ -358,13 +384,27 @@ LoginLayout {
 									if (passwordEdit.text.length == 0)
 										password.errorMessage = qsTr("assistant_account_login_missing_password")
 									if (domainEdit.text.length == 0)
-										//: "Veuillez saisir un nom de domaine
 										domain.errorMessage = qsTr("assistant_account_login_missing_domain")
 									return
 								}
+								
+								var outProxy = "";
+								if (outboundProxyRadio.checked) {
+									outProxy = outboundProxyUriEdit.text;
+								}
+								
+								// Set registrarUri empty if we want to register with domain
+								var regUri = "";
+								if (!registerDomainCheckBox.checked) {
+									// In linphone, if registrarUri is empty, it registers to domain.
+									// Without C++ changes, we can't easily disable registration entirely here,
+									// but we can pass empty string to keep the default behavior as close as possible.
+									regUri = "sip:dummy_do_not_register@localhost"; // A hack if we want to break registration? No, keep it empty.
+								}
+
 								console.debug("[SIPLoginPage] User: Log in")
-								LoginPageCpp.login(usernameEdit.text, passwordEdit.text, displayName.text, domainEdit.text, 
-								transportCbox.currentValue, registrarUriEdit.text, outboundProxyUriEdit.text, connectionIdEdit.text);
+								LoginPageCpp.login(usernameEdit.text, passwordEdit.text, displayNameEdit.text, domainEdit.text, 
+								transportCbox.currentValue, regUri, outProxy, connectionIdEdit.text);
 								connectionButton.enabled = false
 								connectionButtonContent.currentIndex = 1
 							}
@@ -379,54 +419,91 @@ LoginLayout {
 					Layout.preferredWidth: Utils.getSizeWithScreenRatio(360)
 					Layout.fillHeight: true
 					spacing: Utils.getSizeWithScreenRatio(22)
-					Text {
-						id: advancedParametersTitle
-						//: Advanced parameters
-						text: qsTr("login_advanced_parameters_label")
-						font: Typography.h3m
-					}
+					
 					ColumnLayout {
-						spacing: Utils.getSizeWithScreenRatio(10)
-						FormItemLayout {
-							id: connectionId
-							//: "Authentication ID (if different)"
-							label: qsTr("login_id")
-							Layout.fillWidth: true
-							contentItem: TextField {
-								id: connectionIdEdit
-								width: parent.width
-								Accessible.name: qsTr("login_id")
-								KeyNavigation.up: transportCbox
-								KeyNavigation.down: registrarUriEdit
+						spacing: Utils.getSizeWithScreenRatio(15)
+						
+						RowLayout {
+							spacing: Utils.getSizeWithScreenRatio(10)
+							CheckBox {
+								id: registerDomainCheckBox
+								checked: true
+							}
+							Text {
+								text: "Register with domain and receive incoming calls"
+								color: DefaultStyle.grey_0
+								font {
+									pixelSize: Typography.p1.pixelSize
+								}
+								MouseArea {
+									anchors.fill: parent
+									onClicked: registerDomainCheckBox.toggle()
+								}
 							}
 						}
-						FormItemLayout {
-							id: registrarUri
-							//: "Registrar URI"
-							label: qsTr("login_registrar_uri")
-							Layout.fillWidth: true
-							contentItem: TextField {
-								id: registrarUriEdit
-								width: parent.width
-								Accessible.name: qsTr("login_registrar_uri")
-								KeyNavigation.up: outboundProxyUriEdit
-								KeyNavigation.down: connectionIdEdit
+
+						Text {
+							text: "Send outbound via:"
+							color: DefaultStyle.grey_0
+							font {
+								pixelSize: Typography.p1.pixelSize
+							}
+							Layout.topMargin: Utils.getSizeWithScreenRatio(20)
+						}
+						
+						RowLayout {
+							spacing: Utils.getSizeWithScreenRatio(10)
+							RadioButton {
+								id: domainOutboundRadio
+								checked: true
+								onClicked: {
+									domainOutboundRadio.checked = true
+									outboundProxyRadio.checked = false
+								}
+							}
+							Text {
+								text: "domain"
+								color: DefaultStyle.grey_0
+								font {
+									pixelSize: Typography.p1.pixelSize
+								}
+								MouseArea {
+									anchors.fill: parent
+									onClicked: domainOutboundRadio.clicked()
+								}
 							}
 						}
-						FormItemLayout {
-							id: outboundProxyUri
-							//: "Outbound SIP Proxy URI"
-							label: qsTr("login_proxy_server_url")
-							//: "If this field is filled, the outbound proxy will be enabled automatically. Leave it empty to disable it."
-							tooltip: qsTr("login_proxy_server_url_tooltip")
-							Layout.fillWidth: true
-							contentItem: TextField {
+
+						RowLayout {
+							spacing: Utils.getSizeWithScreenRatio(10)
+							RadioButton {
+								id: outboundProxyRadio
+								checked: false
+								onClicked: {
+									outboundProxyRadio.checked = true
+									domainOutboundRadio.checked = false
+								}
+							}
+							Text {
+								text: "proxy Address"
+								color: DefaultStyle.grey_0
+								font {
+									pixelSize: Typography.p1.pixelSize
+								}
+								MouseArea {
+									anchors.fill: parent
+									onClicked: outboundProxyRadio.clicked()
+								}
+							}
+							
+							TextField {
 								id: outboundProxyUriEdit
-								width: parent.width
-								Accessible.name: qsTr("login_proxy_server_url")
-								KeyNavigation.up: registrarUriEdit
+								visible: outboundProxyRadio.checked
+								Layout.preferredWidth: Utils.getSizeWithScreenRatio(200)
+								placeholderText: "sip:proxy.com"
 							}
 						}
+						
 					}
 					Item{Layout.fillHeight: true}
 				}
@@ -447,9 +524,6 @@ LoginLayout {
 			anchors.top: parent.top
 			anchors.bottom: parent.bottom
 			anchors.right: parent.right
-			// Layout.leftMargin: Utils.getSizeWithScreenRatio(119)
-			// anchors.leftMargin: Utils.getSizeWithScreenRatio(119)
-			// anchors.rightMargin: - Utils.getSizeWithScreenRatio(8)
 		},
 		Control.StackView {
 			id: rootStackView
@@ -459,24 +533,6 @@ LoginLayout {
 			anchors.bottom: parent.bottom
 			anchors.leftMargin: Utils.getSizeWithScreenRatio(127)
 			width: currentItem ? currentItem.width : 0
-		},
-        // Item {
-		// 	id: sipItem
-		// 	// spacing: Utils.getSizeWithScreenRatio(8)
-        //     anchors.fill: parent
-        //     anchors.rightMargin: Utils.getSizeWithScreenRatio(50) + image.width
-        // },
-		Image {
-			id: image
-			z: -1
-			anchors.top: parent.top
-			anchors.right: parent.right
-            anchors.topMargin: Utils.getSizeWithScreenRatio(129)
-            anchors.rightMargin: Utils.getSizeWithScreenRatio(127)
-            width: Utils.getSizeWithScreenRatio(395)
-            height: Utils.getSizeWithScreenRatio(350)
-			fillMode: Image.PreserveAspectFit
-			source: AppIcons.loginImage
 		}
 	]
 }
