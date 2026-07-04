@@ -2,8 +2,8 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-	property string welcomeLinphoneLogo: "image://internal/linphone.svg"
-	property string logo: "image://internal/logo.svg"
+	property string welcomeLinphoneLogo: "image://internal/zphone_app_icon.png"
+	property string logo: "image://internal/zphone_app_icon.png"
 	property string welcomeLock: "image://internal/secured.svg"
 	property string lock: "image://internal/lock.svg"
 	property string lockSimple: "image://internal/lock-simple.svg"
@@ -12,7 +12,7 @@ QtObject {
 	property string shieldWarning: "image://internal/shield-warning.svg"
 	property string notTrusted: "image://internal/not-trusted.svg"
 	property string welcomeOpenSource: "image://internal/open_source.svg"
-	property string splashscreenLogo: "image://internal/splashscreen-logo.svg"
+	property string splashscreenLogo: "image://internal/zphone_app_icon.png"
 	property string eyeHide: "image://internal/eye.svg"
 	property string eyeShow: "image://internal/eye-slash.svg"
 	property string downArrow: "image://internal/caret-down.svg"
@@ -159,6 +159,6 @@ QtObject {
 	property string photo: "image://internal/photo.svg"
 	property string ephemeralSettings: "image://internal/ephemeral-settings.svg"
 	property string hourglass: "image://internal/hourglass-simple.svg"
-	property string qtLogo: "image://internal/qt-logo.png"
+	property string qtLogo: "image://internal/zphone_app_icon.png"
 	property string calendarPlus: "image://internal/calendar-plus.svg"
 }
