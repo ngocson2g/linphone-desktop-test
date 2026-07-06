@@ -196,6 +196,40 @@ Item {
                         weight: Utils.getSizeWithScreenRatio(300)
 					}
 				}
+				Rectangle {
+					id: noteContainer
+					Layout.alignment: Qt.AlignHCenter
+					Layout.topMargin: Utils.getSizeWithScreenRatio(15)
+					Layout.preferredWidth: Math.min(parent.width - Utils.getSizeWithScreenRatio(40), Utils.getSizeWithScreenRatio(400))
+					property string noteText: mainItem.contact ? mainItem.contact.core.vcardNote : ""
+					visible: noteText.length > 0
+					
+					Layout.preferredHeight: Math.min(noteContent.height + Utils.getSizeWithScreenRatio(20), Utils.getSizeWithScreenRatio(120))
+					
+					color: DefaultStyle.grey_600
+					radius: Utils.getSizeWithScreenRatio(8)
+					border.color: DefaultStyle.grey_400
+					border.width: Utils.getSizeWithScreenRatio(1)
+					
+					Control.ScrollView {
+						id: noteScrollView
+						anchors.fill: parent
+						anchors.margins: Utils.getSizeWithScreenRatio(10)
+						clip: true
+						
+						Text {
+							id: noteContent
+							width: noteScrollView.width
+							text: "Note :\n" + noteContainer.noteText
+							color: DefaultStyle.grey_0
+							wrapMode: Text.Wrap
+							font {
+								pixelSize: Utils.getSizeWithScreenRatio(13)
+								weight: Utils.getSizeWithScreenRatio(300)
+							}
+						}
+					}
+				}
 			}
 		}
 		Loader{

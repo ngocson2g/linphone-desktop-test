@@ -457,6 +457,39 @@ MainRightPanel {
 						Accessible.name: qsTr("new_phone_number_accessible_name")
 					}
 				}
+				FormItemLayout {
+					id: noteInput
+					Layout.fillWidth: true
+					label: qsTr("note")
+					onYChanged: {
+						editionLayout.ensureVisibleRequested(noteInput)
+					}
+					contentItem: Rectangle {
+						width: parent.width
+						height: Math.max(Utils.getSizeWithScreenRatio(80), noteInputTextArea.contentHeight + Utils.getSizeWithScreenRatio(20))
+						color: DefaultStyle.grey_0
+						radius: Utils.getSizeWithScreenRatio(12)
+						border.color: noteInputTextArea.activeFocus ? DefaultStyle.main1_500_main : DefaultStyle.grey_200
+						border.width: Utils.getSizeWithScreenRatio(1)
+						clip: true
+						
+						Control.TextArea {
+							id: noteInputTextArea
+							anchors.fill: parent
+							anchors.margins: Utils.getSizeWithScreenRatio(10)
+							text: contact.core.vcardNote
+							wrapMode: Text.Wrap
+							onTextChanged: contact.core.vcardNote = text
+							color: DefaultStyle.main2_600
+							font {
+								pixelSize: Typography.p1.pixelSize
+								weight: Typography.p1.weight
+							}
+							background: Item {}
+							Accessible.name: qsTr("note")
+						}
+					}
+				}
 				TemporaryText {
 					id: addressesErrorText
 					Layout.fillWidth: true

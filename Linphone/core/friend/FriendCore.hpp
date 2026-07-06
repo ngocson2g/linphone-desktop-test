@@ -60,6 +60,7 @@ class FriendCore : public QObject, public AbstractObject {
 	Q_PROPERTY(QString fullName READ getFullName NOTIFY fullNameChanged)
 	Q_PROPERTY(QString organization READ getOrganization WRITE setOrganization NOTIFY organizationChanged)
 	Q_PROPERTY(QString job READ getJob WRITE setJob NOTIFY jobChanged)
+	Q_PROPERTY(QString vcardNote READ getVcardNote WRITE setVcardNote NOTIFY vcardNoteChanged)
 	Q_PROPERTY(QString defaultAddress READ getDefaultAddress WRITE setDefaultAddress NOTIFY defaultAddressChanged)
 	Q_PROPERTY(QString defaultFullAddress READ getDefaultFullAddress WRITE setDefaultFullAddress NOTIFY
 	               defaultFullAddressChanged)
@@ -102,6 +103,9 @@ public:
 
 	QString getJob() const;
 	void setJob(const QString &name);
+
+	QString getVcardNote() const;
+	void setVcardNote(const QString &note);
 
 	bool getStarred() const;
 	void onStarredChanged(bool starred);
@@ -171,6 +175,7 @@ signals:
 	void addressChanged();
 	void organizationChanged();
 	void jobChanged();
+	void vcardNoteChanged();
 	void pictureUriChanged();
 	void saved();
 	void isSavedChanged(bool isSaved);
@@ -197,6 +202,7 @@ protected:
 	QString mFullName;
 	QString mOrganization;
 	QString mJob;
+	QString mVcardNote;
 	bool mStarred;
 	QList<QVariant> mPhoneNumberList;
 	QList<QVariant> mAddressList;

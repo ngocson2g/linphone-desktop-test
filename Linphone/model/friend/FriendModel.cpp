@@ -299,6 +299,40 @@ void FriendModel::setJob(const QString &job) {
 	}
 }
 
+QString FriendModel::getVcardNote() const {
+	if (!mMonitor) return "";
+	auto vcard = mMonitor->getVcard();
+	if (vcard) {
+		auto notes = vcard->getExtendedPropertiesValuesByName("X-NOTE");
+		if (!notes.empty()) {
+			QString note = Utils::coreStringToAppString(notes.front());
+			note.replace("\\n", "\n");
+			return note;
+		}
+	}
+	return "";
+}
+
+void FriendModel::setVcardNote(const QString &note) {
+	if (!mMonitor) return;
+	auto vcard = mMonitor->getVcard();
+	bool created = false;
+	if (!vcard) {
+		created = mMonitor->createVcard(mMonitor->getName());
+		vcard = mMonitor->getVcard();
+	}
+	if (vcard) {
+		vcard->removeExtentedPropertiesByName("X-NOTE");
+		if (!note.isEmpty()) {
+			QString escapedNote = note;
+			escapedNote.replace("\n", "\\n");
+			vcard->addExtendedProperty("X-NOTE", Utils::appStringToCoreString(escapedNote));
+		}
+		
+		emit vcardNoteChanged(note);
+	}
+}
+
 bool FriendModel::getStarred() const {
 	return mMonitor ? mMonitor->getStarred() : false;
 }

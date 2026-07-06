@@ -66,6 +66,12 @@ FriendCore::FriendCore(const std::shared_ptr<linphone::Friend> &contact, bool is
 		if (vcard) {
 			mOrganization = Utils::coreStringToAppString(vcard->getOrganization());
 			mJob = Utils::coreStringToAppString(vcard->getJobTitle());
+			auto notes = vcard->getExtendedPropertiesValuesByName("X-NOTE");
+			if (!notes.empty()) {
+				QString note = Utils::coreStringToAppString(notes.front());
+				note.replace("\\n", "\n");
+				mVcardNote = note;
+			}
 			mGivenName = Utils::coreStringToAppString(vcard->getGivenName());
 			mFamilyName = Utils::coreStringToAppString(vcard->getFamilyName());
 			mVCardString = Utils::coreStringToAppString(vcard->asVcard4String());
@@ -126,6 +132,7 @@ FriendCore::FriendCore(const FriendCore &friendCore) {
 	mFullName = friendCore.mFullName;
 	mOrganization = friendCore.mOrganization;
 	mJob = friendCore.mJob;
+	mVcardNote = friendCore.mVcardNote;
 	mPictureUri = friendCore.mPictureUri;
 	mIsSaved = friendCore.mIsSaved;
 	mIsStored = friendCore.mIsStored;
@@ -188,6 +195,9 @@ void FriendCore::setSelf(QSharedPointer<FriendCore> me) {
 			});
 			mFriendModelConnection->makeConnectToModel(&FriendModel::jobChanged, [this](const QString &job) {
 				mFriendModelConnection->invokeToCore([this, job]() { setJob(job); });
+			});
+			mFriendModelConnection->makeConnectToModel(&FriendModel::vcardNoteChanged, [this](const QString &note) {
+				mFriendModelConnection->invokeToCore([this, note]() { setVcardNote(note); });
 			});
 			mFriendModelConnection->makeConnectToModel(&FriendModel::addressesChanged, [this]() {
 				auto numbers = mFriendModel->getAddresses();
@@ -258,6 +268,7 @@ void FriendCore::reset(const FriendCore &contact) {
 	setOrganization(contact.getOrganization());
 	setFullName(contact.getFullName());
 	setJob(contact.getJob());
+	setVcardNote(contact.getVcardNote());
 	setPictureUri(contact.getPictureUri());
 	setIsSaved(mFriendModel != nullptr);
 }
@@ -306,6 +317,18 @@ void FriendCore::setJob(const QString &job) {
 	if (mJob != job) {
 		mJob = job;
 		emit jobChanged();
+		setIsSaved(false);
+	}
+}
+
+QString FriendCore::getVcardNote() const {
+	return mVcardNote;
+}
+
+void FriendCore::setVcardNote(const QString &note) {
+	if (mVcardNote != note) {
+		mVcardNote = note;
+		emit vcardNoteChanged();
 		setIsSaved(false);
 	}
 }
@@ -585,6 +608,7 @@ void FriendCore::writeIntoModel(std::shared_ptr<FriendModel> model) const {
 	model->setOrganization(mOrganization);
 	model->setFullName(mFullName);
 	model->setJob(mJob);
+	model->setVcardNote(mVcardNote);
 	model->setPictureUri(mPictureUri);
 	model->getFriend()->done();
 	emit model->updated();
@@ -612,6 +636,7 @@ void FriendCore::writeFromModel(const std::shared_ptr<FriendModel> &model) {
 	mFamilyName = model->getFamilyName();
 	mOrganization = model->getOrganization();
 	mJob = model->getJob();
+	mVcardNote = model->getVcardNote();
 	mPictureUri = model->getPictureUri();
 }
 

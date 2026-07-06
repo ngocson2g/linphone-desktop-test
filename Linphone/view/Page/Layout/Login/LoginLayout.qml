@@ -16,8 +16,89 @@ Rectangle {
 	property alias titleContent : titleLayout.children
 	property alias centerContent : centerLayout.children
 	property color backgroundColor: DefaultStyle.grey_0
-	property bool showMountains: true
+	property bool showMountains: false
 	color: backgroundColor
+
+	Canvas {
+		id: networkCanvas
+		anchors.fill: parent
+
+		property var nodes: []
+		property int numNodes: 50
+		property real maxDistance: Utils.getSizeWithScreenRatio(150)
+
+		onPaint: {
+			var ctx = getContext("2d");
+			ctx.clearRect(0, 0, width, height);
+			ctx.lineWidth = 1;
+			for (var i = 0; i < numNodes; i++) {
+				var node = nodes[i];
+				node.x += node.vx;
+				node.y += node.vy;
+				if (node.x <= 0 || node.x >= width) node.vx *= -1;
+				if (node.y <= 0 || node.y >= height) node.vy *= -1;
+				
+				ctx.beginPath();
+				ctx.arc(node.x, node.y, 2, 0, 2 * Math.PI);
+				ctx.fillStyle = "rgba(100, 150, 255, 0.6)";
+				ctx.fill();
+				
+				for (var j = i + 1; j < numNodes; j++) {
+					var otherNode = nodes[j];
+					var dx = node.x - otherNode.x;
+					var dy = node.y - otherNode.y;
+					var dist = Math.sqrt(dx * dx + dy * dy);
+					if (dist < maxDistance) {
+						ctx.beginPath();
+						ctx.moveTo(node.x, node.y);
+						ctx.lineTo(otherNode.x, otherNode.y);
+						var opacity = (1.0 - (dist / maxDistance)) * 0.4;
+						ctx.strokeStyle = "rgba(100, 150, 255, " + opacity + ")";
+						ctx.stroke();
+					}
+				}
+			}
+		}
+
+		Component.onCompleted: {
+			for (var i = 0; i < numNodes; i++) {
+				nodes.push({
+					x: Math.random() * 1000,
+					y: Math.random() * 800,
+					vx: (Math.random() - 0.5) * 1,
+					vy: (Math.random() - 0.5) * 1
+				});
+			}
+		}
+
+		Timer {
+			interval: 33
+			running: true
+			repeat: true
+			onTriggered: networkCanvas.requestPaint()
+		}
+	}
+
+	Rectangle {
+		id: bottomGradientOverlay
+		anchors.left: parent.left
+		anchors.right: parent.right
+		anchors.bottom: parent.bottom
+		height: parent.height / 3
+
+		gradient: Gradient {
+			GradientStop { position: 0.0; color: "transparent" }
+			// ZLINK blue color for the bottom edge
+			GradientStop { position: 1.0; color: "#00AFF0" } 
+		}
+
+		// Dynamic intensity (opacity) animation
+		SequentialAnimation on opacity {
+			loops: Animation.Infinite
+			NumberAnimation { to: 0.7; duration: 2500; easing.type: Easing.InOutSine }
+			NumberAnimation { to: 0.2; duration: 2500; easing.type: Easing.InOutSine }
+		}
+	}
 
 	component AboutLine: RowLayout {
 		id: line

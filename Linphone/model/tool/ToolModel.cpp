@@ -279,6 +279,37 @@ ToolModel::findFriendByAddress(const std::shared_ptr<const linphone::Address> &l
 		// qDebug() << "found friend, add to known map";
 		friendsManager->appendKnownFriend(linphoneAddr, f);
 	}
+	
+	if (!f && linphoneAddr) {
+		auto username = Utils::coreStringToAppString(linphoneAddr->getUsername());
+		qWarning() << "[ToolModel] findFriendByAddress fallback! username:" << username;
+		if (!username.isEmpty()) {
+			auto defaultFriendList = CoreModel::getInstance()->getCore()->getDefaultFriendList();
+			if (defaultFriendList) {
+				f = defaultFriendList->findFriendByPhoneNumber(Utils::appStringToCoreString(username));
+				if (!f) {
+					auto friends = defaultFriendList->getFriends();
+					for (auto &friendItem : friends) {
+						auto phoneNumbers = friendItem->getPhoneNumbersWithLabel();
+						for (auto &phoneNumber : phoneNumbers) {
+							if (Utils::coreStringToAppString(phoneNumber->getPhoneNumber()) == username) {
+								f = friendItem;
+								break;
+							}
+						}
+						if (f) break;
+					}
+				}
+				qWarning() << "[ToolModel] findFriendByPhoneNumber returned:" << (f ? "FOUND" : "NOT FOUND");
+				if (f) {
+					if (friendsManager->isInUnknownFriends(key)) {
+						friendsManager->removeUnknownFriend(key);
+					}
+					friendsManager->appendKnownFriend(linphoneAddr, f);
+				}
+			}
+		}
+	}
 	if (!f) {
 		if (friendsManager->isInOtherAddresses(key)) {
 			// qDebug() << "A magic search has already be done for address" << key << "and nothing was found,return ";

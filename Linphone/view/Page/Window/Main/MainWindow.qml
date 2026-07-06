@@ -77,18 +77,17 @@ AbstractWindow {
 	}
 	function initStackViewItem() {
         if(accountProxy && accountProxy.isInitialized) {
-            if (accountProxy.haveAccount) openMainPage()
+            if (accountProxy.haveAccount) {
+				openMainPage()
+				mainWindowStackView.currentItem.goToNewCall()
+			}
             else if (SettingsCpp.getFirstLaunch()) mainWindowStackView.replace(welcomePage, StackView.Immediate)
-            else if (SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin) mainWindowStackView.replace(sipLoginPage, StackView.Immediate)
-            else mainWindowStackView.replace(loginPage, StackView.Immediate)
+            else mainWindowStackView.replace(sipLoginPage, StackView.Immediate)
         }
     }
 	
 	function goToLogin() {
-		if (SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin)
-			mainWindowStackView.replace(sipLoginPage)
-		else
-			mainWindowStackView.replace(loginPage)
+		mainWindowStackView.replace(sipLoginPage)
 	}
 
 	function openSSOPage() {
@@ -140,6 +139,7 @@ AbstractWindow {
 		function onRegistrationStateChanged() {
 			if (LoginPageCpp.registrationState === LinphoneEnums.RegistrationState.Ok) {
 				openMainPage(true)
+				mainWindowStackView.currentItem.goToNewCall()
 				proposeH264CodecsDownload()
 			}
 		}
@@ -239,14 +239,11 @@ AbstractWindow {
 		SIPLoginPage {
 			objectName: "sipLoginPage"
 			onGoBack: {
-				if(SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin){
-					openMainPage()
-				}else
-					mainWindowStackView.pop()
+				openMainPage()
 			}
 			onGoToRegister: mainWindowStackView.replace(registerPage)
             showBackButton: false
-            StackView.onActivated: if (!SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin || mainWindow.accountProxy?.haveAccount) showBackButton = true
+            StackView.onActivated: if (mainWindow.accountProxy?.haveAccount) showBackButton = true
 		}
 	}
 	Component {

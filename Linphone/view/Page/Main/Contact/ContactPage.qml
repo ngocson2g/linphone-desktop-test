@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
+import QtQuick.Dialogs
 import QtQuick.Controls.Basic as Control
 import Linphone
 import UtilsCpp
@@ -130,6 +131,25 @@ AbstractMainPage {
                     })
     }
 
+    FileDialog {
+        id: csvFileDialog
+        title: "Select CSV File"
+        nameFilters: ["CSV files (*.csv)"]
+        onAccepted: {
+            var result = UtilsCpp.importContactsFromCsv(csvFileDialog.selectedFile)
+            if (result.error) {
+                UtilsCpp.showInformationPopup("Import Error", result.error)
+            } else {
+                var msg = "Import successful!\n\nImported: " + result.successCount + " contacts.\nMerged: " + result.duplicateCount + " contacts."
+                if (result.duplicateCount > 0) {
+                    msg += "\n\nDuplicates:\n" + result.duplicateNames.join(", ")
+                }
+                UtilsCpp.showInformationPopup("Import CSV", msg)
+                contactList.mainModel.forceUpdate()
+            }
+        }
+    }
+
     Dialog {
         id: verifyDevicePopup
         property string deviceName
@@ -249,6 +269,21 @@ AbstractMainPage {
                 color: DefaultStyle.main2_700
                 font.pixelSize: Typography.h2.pixelSize
                 font.weight: Typography.h2.weight
+            }
+            Button {
+                id: importCsvButton
+                visible: !rightPanelStackView.currentItem || rightPanelStackView.currentItem.objectName !== "contactEdition"
+                style: ButtonStyle.noBackground
+                focus: true
+                icon.source: AppIcons.download
+                Layout.preferredWidth: Utils.getSizeWithScreenRatio(28)
+                Layout.preferredHeight: Utils.getSizeWithScreenRatio(28)
+                icon.width: Utils.getSizeWithScreenRatio(28)
+                icon.height: Utils.getSizeWithScreenRatio(28)
+                onClicked: {
+                    csvFileDialog.open()
+                }
+                Accessible.name: qsTr("Import CSV")
             }
             Button {
                 id: createContactButton
@@ -565,8 +600,9 @@ AbstractMainPage {
                             }
                             RoundedPane {
                                 visible: infoLayout.visible
-                                         && companyText.text.length != 0
+                                         && (companyText.text.length != 0
                                          || jobText.text.length != 0
+                                         || noteText.text.length != 0)
                                 Layout.fillWidth: true
                                 topPadding: Utils.getSizeWithScreenRatio(17)
                                 bottomPadding: Utils.getSizeWithScreenRatio(17)
@@ -587,8 +623,7 @@ AbstractMainPage {
                                         }
                                         Text {
                                             id: companyText
-                                            text: mainItem.selectedContact
-                                                  && mainItem.selectedContact.core.organization
+                                            text: mainItem.selectedContact ? mainItem.selectedContact.core.organization : ""
                                             font {
                                                 pixelSize: Typography.p1.pixelSize
                                                 weight: Typography.p1.weight
@@ -608,11 +643,40 @@ AbstractMainPage {
                                         }
                                         Text {
                                             id: jobText
-                                            text: mainItem.selectedContact
-                                                  && mainItem.selectedContact.core.job
+                                            text: mainItem.selectedContact ? mainItem.selectedContact.core.job : ""
                                             font {
                                                 pixelSize: Typography.p1.pixelSize
                                                 weight: Typography.p1.weight
+                                            }
+                                        }
+                                    }
+                                    ColumnLayout {
+                                        visible: noteText.text.length != 0
+                                        Layout.fillWidth: true
+                                        Text {
+                                            text: "Note :"
+                                            font {
+                                                pixelSize: Typography.p2.pixelSize
+                                                weight: Typography.p2.weight
+                                            }
+                                        }
+                                        Rectangle {
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: noteText.height + Utils.getSizeWithScreenRatio(10)
+                                            color: DefaultStyle.grey_100
+                                            radius: Utils.getSizeWithScreenRatio(4)
+                                            clip: true
+                                            Text {
+                                                id: noteText
+                                                width: parent.width - Utils.getSizeWithScreenRatio(10)
+                                                anchors.centerIn: parent
+                                                text: mainItem.selectedContact ? mainItem.selectedContact.core.vcardNote : ""
+                                                wrapMode: Text.Wrap
+                                                color: DefaultStyle.main2_700
+                                                font {
+                                                    pixelSize: Typography.p1.pixelSize
+                                                    weight: Typography.p1.weight
+                                                }
                                             }
                                         }
                                     }

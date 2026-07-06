@@ -2335,3 +2335,165 @@ void Utils::forceCrash() {
 	lInfo() << "throwing segmentation fault for debug";
 	raise(SIGSEGV);
 }
+
+QVariantMap Utils::importContactsFromCsv(const QString &filePath) {
+	QVariantMap result;
+	int successCount = 0;
+	int duplicateCount = 0;
+	QStringList duplicateNames;
+
+	QString actualPath = filePath;
+	if (actualPath.startsWith("file://")) {
+		actualPath = QUrl(actualPath).toLocalFile();
+	}
+
+	QFile file(actualPath);
+	if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+		result["error"] = "Cannot open file";
+		return result;
+	}
+
+	QTextStream in(&file);
+
+	auto core = CoreModel::getInstance()->getCore();
+	auto appFriends = ToolModel::getAppFriendList();
+	if (!core || !appFriends) {
+		result["error"] = "Core not initialized";
+		return result;
+	}
+
+	bool firstLine = true;
+	while (!in.atEnd()) {
+		QString line = in.readLine().trimmed();
+		if (line.isEmpty()) continue;
+
+		QStringList parts = line.split(',');
+		
+		QString phone, name, note;
+		if (parts.size() >= 1) phone = parts[0].trimmed();
+		if (parts.size() >= 2) name = parts[1].trimmed();
+		if (parts.size() >= 3) {
+			note = parts.mid(2).join(",").trimmed();
+		}
+		
+		if (phone.startsWith("\"") && phone.endsWith("\"")) phone = phone.mid(1, phone.length()-2);
+		if (name.startsWith("\"") && name.endsWith("\"")) name = name.mid(1, name.length()-2);
+		if (note.startsWith("\"") && note.endsWith("\"")) note = note.mid(1, note.length()-2);
+
+		if (firstLine) {
+			firstLine = false;
+			if (phone.toLower().contains("phone") || phone.toLower().contains("number") || phone.toLower().contains("sip")) {
+				continue;
+			}
+		}
+
+		if (phone.isEmpty()) continue;
+
+		try {
+			std::shared_ptr<linphone::Friend> existingFriend = nullptr;
+			std::shared_ptr<linphone::Address> linphoneAddr = nullptr;
+			if (phone.contains("@") || phone.startsWith("sip:")) {
+				linphoneAddr = ToolModel::interpretUrl(phone);
+			}
+			
+			if (linphoneAddr) {
+				existingFriend = appFriends->findFriendByAddress(linphoneAddr);
+			}
+			if (!existingFriend) {
+				existingFriend = appFriends->findFriendByPhoneNumber(Utils::appStringToCoreString(phone));
+			}
+
+			if (existingFriend) {
+				duplicateCount++;
+				duplicateNames.append(name.isEmpty() ? phone : name);
+				
+				existingFriend->edit();
+				
+				bool createdVcard = false;
+				auto vcard = existingFriend->getVcard();
+				if (!vcard) {
+					createdVcard = existingFriend->createVcard(existingFriend->getName());
+					vcard = existingFriend->getVcard();
+				}
+				if (vcard) {
+					if (!name.isEmpty()) {
+						vcard->setGivenName(Utils::appStringToCoreString(getGivenNameFromFullName(name)));
+						vcard->setFamilyName(Utils::appStringToCoreString(getFamilyNameFromFullName(name)));
+						vcard->setFullName(Utils::appStringToCoreString(name));
+					}
+					
+					if (!note.isEmpty()) {
+						QString currentNote;
+						auto notes = vcard->getExtendedPropertiesValuesByName("X-NOTE");
+						if (!notes.empty()) {
+							currentNote = Utils::coreStringToAppString(notes.front());
+							currentNote.replace("\\n", "\n");
+						}
+
+						vcard->removeExtentedPropertiesByName("X-NOTE");
+						QString newNote = note;
+						if (!currentNote.isEmpty() && !currentNote.contains(note)) {
+							newNote = currentNote + "\n[CSV]: " + note;
+						}
+						QString escapedNote = newNote;
+						escapedNote.replace("\n", "\\n");
+						vcard->addExtendedProperty("X-NOTE", Utils::appStringToCoreString(escapedNote));
+					}
+				}
+				
+				existingFriend->done();
+			} else {
+				auto newFriend = core->createFriend();
+				QString finalName = name.isEmpty() ? phone : name;
+				newFriend->setName(Utils::appStringToCoreString(finalName));
+				
+				bool createdVcard = false;
+				auto vcard = newFriend->getVcard();
+				if (!vcard) {
+					createdVcard = newFriend->createVcard(newFriend->getName());
+					vcard = newFriend->getVcard();
+				}
+				if (vcard) {
+					vcard->setGivenName(Utils::appStringToCoreString(getGivenNameFromFullName(finalName)));
+					vcard->setFamilyName(Utils::appStringToCoreString(getFamilyNameFromFullName(finalName)));
+					// setFullName is already handled safely by newFriend->setName()
+					
+					vcard->removeExtentedPropertiesByName("X-NOTE");
+					if (!note.isEmpty()) {
+						QString escapedNote = note;
+						escapedNote.replace("\n", "\\n");
+						vcard->addExtendedProperty("X-NOTE", Utils::appStringToCoreString(escapedNote));
+					}
+				}
+				
+				auto phoneNumber = linphone::Factory::get()->createFriendPhoneNumber(Utils::appStringToCoreString(phone), "");
+				if (phoneNumber) {
+					newFriend->addPhoneNumberWithLabel(phoneNumber);
+				}
+				if (linphoneAddr) {
+					newFriend->addAddress(linphoneAddr);
+				}
+				
+				bool created = (appFriends->addFriend(newFriend) == linphone::FriendList::Status::OK);
+				if (created) {
+					newFriend->done();
+					successCount++;
+				}
+			}
+		} catch (const std::exception &e) {
+			qWarning() << "Exception during CSV import for phone" << phone << ":" << e.what();
+		}
+	}
+	
+	if (successCount > 0 || duplicateCount > 0) {
+		appFriends->updateSubscriptions();
+		if (appFriends->getType() == linphone::FriendList::Type::CardDAV) {
+			appFriends->synchronizeFriendsFromServer();
+		}
+	}
+
+	result["successCount"] = successCount;
+	result["duplicateCount"] = duplicateCount;
+	result["duplicateNames"] = duplicateNames;
+	return result;
+}

@@ -5,9 +5,7 @@ import SettingsCpp
 
 QtObject {
 
-	property var currentTheme: Themes.themes.hasOwnProperty(SettingsCpp.themeMainColor)
-							  ? Themes.themes[SettingsCpp.themeMainColor]
-							  : Themes.themes["orange"]
+	property var currentTheme: Themes.themes["blue"]
     property var main1_100: currentTheme.main100
     property var main1_200: currentTheme.main200
     property var main1_300: currentTheme.main300

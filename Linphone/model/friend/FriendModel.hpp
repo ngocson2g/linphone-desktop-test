@@ -51,6 +51,7 @@ public:
 	QString getFamilyName() const;
 	QString getOrganization() const;
 	QString getJob() const;
+	QString getVcardNote() const;
 	QString getDefaultAddress() const;
 	QString getDefaultFullAddress() const;
 	bool getStarred() const;
@@ -80,6 +81,7 @@ public:
 	void setFamilyName(const QString &name);
 	void setOrganization(const QString &orga);
 	void setJob(const QString &job);
+	void setVcardNote(const QString &note);
 
 	void setPictureUri(const QString &uri);
 	void setStarred(bool starred);
@@ -107,6 +109,7 @@ signals:
 	void familyNameChanged(const QString &name);
 	void organizationChanged(const QString &orga);
 	void jobChanged(const QString &job);
+	void vcardNoteChanged(const QString &note);
 	void presenceReceived(LinphoneEnums::Presence presence, QString presenceNote);
 	void updated();
 	void removed();

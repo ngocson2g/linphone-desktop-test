@@ -53,7 +53,7 @@ LoginLayout {
 			Layout.fillWidth: true
 		},
 		RowLayout {
-			visible: !SettingsCpp.assistantHideCreateAccount
+			visible: false // Hidden by user request
             spacing: Utils.getSizeWithScreenRatio(20)
             Layout.rightMargin: Math.max(Utils.getSizeWithScreenRatio(10), Utils.getSizeWithScreenRatio(51 - ((51/(DefaultStyle.defaultWidth - mainWindow.minimumWidth))*(DefaultStyle.defaultWidth-mainWindow.width))))
 
@@ -110,6 +110,7 @@ LoginLayout {
 			}
 		},
 		Image {
+			visible: false
 			z: -1
 			anchors.top: parent.top
 			anchors.right: parent.right

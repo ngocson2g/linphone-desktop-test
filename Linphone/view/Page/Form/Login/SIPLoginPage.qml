@@ -15,70 +15,10 @@ LoginLayout {
 	signal goToRegister()
 	property bool showBackButton: false
 
-	backgroundColor: "#08101a"
+	backgroundColor: "#FFFFFF"
 	showMountains: false
 
-	Canvas {
-		id: networkCanvas
-		parent: mainItem
-		anchors.fill: parent
-		z: -2
 
-		property var nodes: []
-		property int numNodes: 50
-		property real maxDistance: Utils.getSizeWithScreenRatio(150)
-
-		onPaint: {
-			var ctx = getContext("2d");
-			ctx.clearRect(0, 0, width, height);
-			ctx.lineWidth = 1;
-			for (var i = 0; i < numNodes; i++) {
-				var node = nodes[i];
-				node.x += node.vx;
-				node.y += node.vy;
-				if (node.x <= 0 || node.x >= width) node.vx *= -1;
-				if (node.y <= 0 || node.y >= height) node.vy *= -1;
-				
-				ctx.beginPath();
-				ctx.arc(node.x, node.y, 2, 0, 2 * Math.PI);
-				ctx.fillStyle = "rgba(100, 150, 255, 0.6)";
-				ctx.fill();
-				
-				for (var j = i + 1; j < numNodes; j++) {
-					var otherNode = nodes[j];
-					var dx = node.x - otherNode.x;
-					var dy = node.y - otherNode.y;
-					var dist = Math.sqrt(dx * dx + dy * dy);
-					if (dist < maxDistance) {
-						ctx.beginPath();
-						ctx.moveTo(node.x, node.y);
-						ctx.lineTo(otherNode.x, otherNode.y);
-						var opacity = (1.0 - (dist / maxDistance)) * 0.4;
-						ctx.strokeStyle = "rgba(100, 150, 255, " + opacity + ")";
-						ctx.stroke();
-					}
-				}
-			}
-		}
-
-		Component.onCompleted: {
-			for (var i = 0; i < numNodes; i++) {
-				nodes.push({
-					x: Math.random() * 1000,
-					y: Math.random() * 800,
-					vx: (Math.random() - 0.5) * 1,
-					vy: (Math.random() - 0.5) * 1
-				});
-			}
-		}
-
-		Timer {
-			interval: 33
-			running: true
-			repeat: true
-			onTriggered: networkCanvas.requestPaint()
-		}
-	}
 
 	titleContent: [
 		RowLayout {
@@ -97,7 +37,7 @@ LoginLayout {
 				spacing: 2
 				Text {
 					text: "Add new SIP account"
-					color: DefaultStyle.grey_0
+					color: DefaultStyle.grey_900
 					font {
 						pixelSize: Typography.h1.pixelSize
 						weight: Typography.h1.weight
@@ -105,8 +45,8 @@ LoginLayout {
 					scaleLettersFactor: 1.1
 				}
 				Text {
-					text: "don't have, take one from <a href='https://voip.com.vn' style='color:#55aaff;text-decoration:none;'>ZLINK</a>"
-					color: DefaultStyle.grey_0
+					text: "don't have, take one from <a href='https://voip.com.vn' style='color:#00AFF0;text-decoration:none;'>ZLINK</a>"
+					color: DefaultStyle.grey_900
 					font {
 						pixelSize: Typography.p1.pixelSize
 						weight: Typography.p1.weight
@@ -119,6 +59,7 @@ LoginLayout {
 			Layout.fillWidth: true
 		},
 		RowLayout {
+			visible: false // Hidden by user request
 			Layout.rightMargin: Utils.getSizeWithScreenRatio(51)
 			spacing: Utils.getSizeWithScreenRatio(20)
 			BigButton {
@@ -152,7 +93,7 @@ LoginLayout {
 						Text {
 							Layout.fillWidth: true
 							wrapMode: Text.WordWrap
-							color: DefaultStyle.grey_0
+							color: DefaultStyle.grey_900
 							font {
 								pixelSize: Typography.p1.pixelSize
 								weight: Typography.p1.weight
@@ -217,7 +158,7 @@ LoginLayout {
 							spacing: Utils.getSizeWithScreenRatio(10)
 							FormItemLayout {
 								id: displayName
-								label: "<font color='white'>" + qsTr("sip_address_display_name") + "</font>"
+								label: "<font color='#333333'>" + qsTr("sip_address_display_name") + "</font>"
 								Layout.fillWidth: true
 								contentItem: TextField {
 									id: displayNameEdit
@@ -227,7 +168,7 @@ LoginLayout {
 							}
 							FormItemLayout {
 								id: username
-								label: "<font color='white'>" + qsTr("username") + "</font>"
+								label: "<font color='#333333'>" + qsTr("username") + "</font>"
 								mandatory: true
 								enableErrorText: true
 								Layout.fillWidth: true
@@ -241,7 +182,7 @@ LoginLayout {
 							}
 							FormItemLayout {
 								id: password
-								label: "<font color='white'>" + qsTr("password") + "</font>"
+								label: "<font color='#333333'>" + qsTr("password") + "</font>"
 								mandatory: true
 								enableErrorText: true
 								Layout.fillWidth: true
@@ -256,7 +197,7 @@ LoginLayout {
 							}
 							FormItemLayout {
 								id: connectionId
-								label: "<font color='white'>" + qsTr("login_id") + "</font>"
+								label: "<font color='#333333'>" + qsTr("login_id") + "</font>"
 								Layout.fillWidth: true
 								contentItem: TextField {
 									id: connectionIdEdit
@@ -267,7 +208,7 @@ LoginLayout {
 							}
 							FormItemLayout {
 								id: domain
-								label: "<font color='white'>" + qsTr("sip_address_domain") + "</font>"
+								label: "<font color='#333333'>" + qsTr("sip_address_domain") + "</font>"
 								tooltip: qsTr("sip_address_domain_tooltip")
 								mandatory: true
 								enableErrorText: true
@@ -300,9 +241,7 @@ LoginLayout {
 									{text: "TLS", value: LinphoneEnums.TransportType.Tls},
 									{text: "DTLS", value: LinphoneEnums.TransportType.Dtls}
 								]
-								currentIndex: Utils.findIndex(model, function (entry) {
-									return entry.text === SettingsCpp.assistantThirdPartySipAccountTransport.toUpperCase()
-								})
+								currentIndex: 1
 							}
 							TextField {
 								id: registrarUriEdit
@@ -400,9 +339,12 @@ LoginLayout {
 									// Without C++ changes, we can't easily disable registration entirely here,
 									// but we can pass empty string to keep the default behavior as close as possible.
 									regUri = "sip:dummy_do_not_register@localhost"; // A hack if we want to break registration? No, keep it empty.
+								} else if (outProxy !== "") {
+									// If proxy is set, use it as registrar URI to avoid DNS resolution of the fake domain
+									regUri = outProxy;
 								}
 
-								console.debug("[SIPLoginPage] User: Log in")
+								console.debug("[SIPLoginPage] User: Log in, regUri:", regUri, "outProxy:", outProxy)
 								LoginPageCpp.login(usernameEdit.text, passwordEdit.text, displayNameEdit.text, domainEdit.text, 
 								transportCbox.currentValue, regUri, outProxy, connectionIdEdit.text);
 								connectionButton.enabled = false
@@ -431,7 +373,7 @@ LoginLayout {
 							}
 							Text {
 								text: "Register with domain and receive incoming calls"
-								color: DefaultStyle.grey_0
+								color: DefaultStyle.grey_900
 								font {
 									pixelSize: Typography.p1.pixelSize
 								}
@@ -444,7 +386,7 @@ LoginLayout {
 
 						Text {
 							text: "Send outbound via:"
-							color: DefaultStyle.grey_0
+							color: DefaultStyle.grey_900
 							font {
 								pixelSize: Typography.p1.pixelSize
 							}
@@ -459,11 +401,12 @@ LoginLayout {
 								onClicked: {
 									domainOutboundRadio.checked = true
 									outboundProxyRadio.checked = false
+									targetDomainOutboundRadio.checked = false
 								}
 							}
 							Text {
 								text: "domain"
-								color: DefaultStyle.grey_0
+								color: DefaultStyle.grey_900
 								font {
 									pixelSize: Typography.p1.pixelSize
 								}
@@ -482,11 +425,12 @@ LoginLayout {
 								onClicked: {
 									outboundProxyRadio.checked = true
 									domainOutboundRadio.checked = false
+									targetDomainOutboundRadio.checked = false
 								}
 							}
 							Text {
 								text: "proxy Address"
-								color: DefaultStyle.grey_0
+								color: DefaultStyle.grey_900
 								font {
 									pixelSize: Typography.p1.pixelSize
 								}
@@ -501,6 +445,30 @@ LoginLayout {
 								visible: outboundProxyRadio.checked
 								Layout.preferredWidth: Utils.getSizeWithScreenRatio(200)
 								placeholderText: "sip:proxy.com"
+							}
+						}
+						
+						RowLayout {
+							spacing: Utils.getSizeWithScreenRatio(10)
+							RadioButton {
+								id: targetDomainOutboundRadio
+								checked: false
+								onClicked: {
+									targetDomainOutboundRadio.checked = true
+									domainOutboundRadio.checked = false
+									outboundProxyRadio.checked = false
+								}
+							}
+							Text {
+								text: "target domain"
+								color: DefaultStyle.grey_900
+								font {
+									pixelSize: Typography.p1.pixelSize
+								}
+								MouseArea {
+									anchors.fill: parent
+									onClicked: targetDomainOutboundRadio.clicked()
+								}
 							}
 						}
 						
@@ -527,7 +495,7 @@ LoginLayout {
 		},
 		Control.StackView {
 			id: rootStackView
-			initialItem: SettingsCpp.assistantGoDirectlyToThirdPartySipAccountLogin ? secondItem : firstItem
+			initialItem: secondItem // Always skip the Linphone warning page and go straight to the form
 			anchors.left: parent.left
 			anchors.top: parent.top
 			anchors.bottom: parent.bottom
