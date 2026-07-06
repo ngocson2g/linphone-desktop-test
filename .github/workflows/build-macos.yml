@@ -1,0 +1,238 @@
+################################################################################
+#
+#  GitHub Actions: Build Zlink Softphone for macOS
+#
+#  Adapted from: .gitlab-ci-files/macosx-desktop.yml
+#  Runner:       macos-13 (Intel x86_64) — most stable for Qt6/Linphone SDK
+#  Architecture: x86_64 (default) or arm64 via LINPHONEAPP_MACOS_ARCHS
+#
+#  Build stages:
+#    1. Install Homebrew deps (cmake, ninja, ccache, doxygen, meson...)
+#    2. Install Qt6 via aqtinstall (cached)
+#    3. CMake configure + build (linphone-sdk built from source)
+#    4. Upload artifacts (build output / .dmg if packaging enabled)
+#
+#  First build: ~60–120 min (compiles linphone-sdk from scratch)
+#  Subsequent: ~15–30 min (SDK cached)
+#
+################################################################################
+
+name: Build macOS Desktop
+
+on:
+  push:
+    branches: [ master, main, 'release/**' ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type (RelWithDebInfo, Debug, Release)'
+        required: false
+        default: 'RelWithDebInfo'
+      enable_packaging:
+        description: 'Enable packaging — creates a signed .dmg'
+        required: false
+        default: 'false'
+        type: boolean
+      macos_arch:
+        description: 'Target architecture (x86_64 | arm64 | x86_64,arm64)'
+        required: false
+        default: 'x86_64'
+
+env:
+  # ── Qt ────────────────────────────────────────────────────────────────────
+  QT_VERSION: '6.8.0'
+  QT_TARGET: 'clang_64'        # Intel x86_64. Change to 'macos' for universal.
+
+  # ── Build ─────────────────────────────────────────────────────────────────
+  BUILD_TYPE:      ${{ github.event.inputs.build_type || 'RelWithDebInfo' }}
+  PARALLEL_JOBS:   4
+  MACOS_DEPLOY_TARGET: '12.3'  # Minimum macOS version supported
+
+  # ── App identity (matches CMakeLists.txt / application_info.cmake) ────────
+  APP_NAME:        'Zphone'
+  EXECUTABLE_NAME: 'zphone'
+
+  # ── Feature flags ─────────────────────────────────────────────────────────
+  ENABLE_CRASH_HANDLER:    'OFF'   # Requires Google Breakpad — disabled in CI
+  ENABLE_VIDEO:            'YES'
+  ENABLE_NON_FREE_CODECS:  'YES'
+  ENABLE_OPENH264:         'YES'
+  ENABLE_PQCRYPTO:         'OFF'   # liboqs not stable on all arch
+  ENABLE_UNIT_TESTS:       'OFF'
+
+jobs:
+  # ============================================================
+  # Job: build-macos
+  # ============================================================
+  build-macos:
+    name: macOS x86_64 — Ninja + Apple Clang
+    runs-on: macos-13          # Intel runner — best Qt6 compatibility
+    timeout-minutes: 300       # SDK first-build can take 2 h
+
+    steps:
+      # ─────────────────────────────────────────────────────────
+      # 1. Checkout
+      # ─────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ─────────────────────────────────────────────────────────
+      # 2. Homebrew dependencies
+      #    (mirrors the GitLab macosx runner pre-installed tools)
+      # ─────────────────────────────────────────────────────────
+      - name: Install Homebrew dependencies
+        run: |
+          brew update --quiet
+          brew install cmake ninja ccache doxygen pkg-config meson nasm yasm \
+            || true  # ignore "already installed" errors
+
+      # ─────────────────────────────────────────────────────────
+      # 3. Python + pip packages
+      # ─────────────────────────────────────────────────────────
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pystache six aqtinstall
+
+      # ─────────────────────────────────────────────────────────
+      # 4. Qt6 — cached between runs
+      # ─────────────────────────────────────────────────────────
+      - name: Cache Qt6
+        id: cache-qt
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/Qt
+          key: qt-${{ env.QT_VERSION }}-macos-${{ env.QT_TARGET }}-v1
+
+      - name: Install Qt6 (aqtinstall)
+        if: steps.cache-qt.outputs.cache-hit != 'true'
+        run: |
+          python -m aqt install-qt mac desktop ${{ env.QT_VERSION }} ${{ env.QT_TARGET }} \
+            --outputdir "${{ github.workspace }}/Qt" \
+            --modules qtnetworkauth qtshadertools
+          echo "Qt6 installed to ${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/macos"
+
+      - name: Set Qt6 environment variables
+        run: |
+          QT_BASE="${{ github.workspace }}/Qt/${{ env.QT_VERSION }}/macos"
+          echo "Qt6_DIR=${QT_BASE}/lib/cmake/Qt6"       >> $GITHUB_ENV
+          echo "CMAKE_PREFIX_PATH=${QT_BASE}"            >> $GITHUB_ENV
+          echo "${QT_BASE}/bin"                          >> $GITHUB_PATH
+          echo "Qt6_DIR is: ${QT_BASE}/lib/cmake/Qt6"
+
+      # ─────────────────────────────────────────────────────────
+      # 5. ccache setup (speeds up C++ compilation)
+      # ─────────────────────────────────────────────────────────
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ccache-macos-${{ env.BUILD_TYPE }}
+          max-size: 2G
+
+      - name: Add ccache to PATH
+        run: echo "/usr/lib/ccache:/usr/local/opt/ccache/libexec" >> $GITHUB_PATH
+
+      # ─────────────────────────────────────────────────────────
+      # 6. Cache linphone-sdk build artifacts
+      #    (the most expensive part — first build takes ~90 min)
+      # ─────────────────────────────────────────────────────────
+      - name: Cache linphone-sdk
+        uses: actions/cache@v4
+        with:
+          path: build/external/linphone-sdk
+          key: linphone-sdk-macos-x86_64-${{ hashFiles('linphone-desktop/external/linphone-sdk/CMakeLists.txt', 'linphone-desktop/external/linphone-sdk/cmake/ExternalProject.cmake') }}-${{ env.BUILD_TYPE }}
+          restore-keys: |
+            linphone-sdk-macos-x86_64-
+
+      # ─────────────────────────────────────────────────────────
+      # 7. CMake Configure
+      #    Mirrors the GitLab .build_all_script anchor
+      # ─────────────────────────────────────────────────────────
+      - name: CMake Configure
+        working-directory: linphone-desktop
+        run: |
+          rm -rf build && mkdir -p build/OUTPUT
+          cd build
+          cmake .. \
+            -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=${{ env.MACOS_DEPLOY_TARGET }} \
+            -DLINPHONEAPP_APPLICATION_NAME="${{ env.APP_NAME }}" \
+            -DLINPHONEAPP_EXECUTABLE_NAME="${{ env.EXECUTABLE_NAME }}" \
+            -DLINPHONEAPP_MACOS_ARCHS="${{ github.event.inputs.macos_arch || 'x86_64' }}" \
+            -DENABLE_CRASH_HANDLER=${{ env.ENABLE_CRASH_HANDLER }} \
+            -DENABLE_VIDEO=${{ env.ENABLE_VIDEO }} \
+            -DENABLE_NON_FREE_CODECS=${{ env.ENABLE_NON_FREE_CODECS }} \
+            -DENABLE_OPENH264=${{ env.ENABLE_OPENH264 }} \
+            -DENABLE_PQCRYPTO=${{ env.ENABLE_PQCRYPTO }} \
+            -DENABLE_UNIT_TESTS=${{ env.ENABLE_UNIT_TESTS }} \
+            -DENABLE_APP_PACKAGING=${{ github.event.inputs.enable_packaging == 'true' && 'YES' || 'NO' }} \
+            -DENABLE_BUILD_VERBOSE=ON \
+            -DPython3_ROOT_DIR="$(python3 -c 'import sys; print(sys.prefix)')" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      # ─────────────────────────────────────────────────────────
+      # 8. Build
+      # ─────────────────────────────────────────────────────────
+      - name: Build
+        working-directory: linphone-desktop
+        run: |
+          cd build
+          cmake --build . --target install \
+            --parallel ${{ env.PARALLEL_JOBS }} \
+            --config ${{ env.BUILD_TYPE }}
+
+      # ─────────────────────────────────────────────────────────
+      # 9. Print ccache stats
+      # ─────────────────────────────────────────────────────────
+      - name: ccache stats
+        if: always()
+        run: ccache -s
+
+      # ─────────────────────────────────────────────────────────
+      # 10. Upload build output
+      # ─────────────────────────────────────────────────────────
+      - name: Upload build output
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zlink-softphone-macos-${{ env.BUILD_TYPE }}
+          path: linphone-desktop/build/OUTPUT/
+          retention-days: 14
+
+      # ─────────────────────────────────────────────────────────
+      # 11. Upload .dmg (only when packaging is enabled)
+      # ─────────────────────────────────────────────────────────
+      - name: Upload DMG installer
+        if: success() && github.event.inputs.enable_packaging == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: zlink-softphone-macos-dmg
+          path: linphone-desktop/build/OUTPUT/macos/Packages/*.dmg
+          if-no-files-found: warn
+          retention-days: 30
+
+      # ─────────────────────────────────────────────────────────
+      # 12. Upload logs on failure (for debugging)
+      # ─────────────────────────────────────────────────────────
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-macos
+          path: |
+            linphone-desktop/build/ninja_buildlog.txt
+            linphone-desktop/build/CMakeCache.txt
+            linphone-desktop/build/CMakeFiles/CMakeOutput.log
+            linphone-desktop/build/CMakeFiles/CMakeError.log
+          retention-days: 7
