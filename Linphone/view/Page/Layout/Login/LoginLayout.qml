@@ -39,7 +39,7 @@ Rectangle {
 				if (node.y <= 0 || node.y >= height) node.vy *= -1;
 				
 				ctx.beginPath();
-				ctx.arc(node.x, node.y, 2, 0, 2 * Math.PI);
+				ctx.arc(node.x, node.y, 3, 0, 2 * Math.PI);
 				ctx.fillStyle = "rgba(100, 150, 255, 0.6)";
 				ctx.fill();
 				
@@ -52,7 +52,7 @@ Rectangle {
 						ctx.beginPath();
 						ctx.moveTo(node.x, node.y);
 						ctx.lineTo(otherNode.x, otherNode.y);
-						var opacity = (1.0 - (dist / maxDistance)) * 0.4;
+						var opacity = (1.0 - (dist / maxDistance)) * 0.5;
 						ctx.strokeStyle = "rgba(100, 150, 255, " + opacity + ")";
 						ctx.stroke();
 					}

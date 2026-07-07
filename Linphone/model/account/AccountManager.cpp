@@ -68,7 +68,7 @@ bool AccountManager::login(QString username,
 	mustBeInLinphoneThread(log().arg(Q_FUNC_INFO));
 	auto core = CoreModel::getInstance()->getCore();
 	auto factory = linphone::Factory::get();
-	QString assistantFile = (!QString::compare(domain, "sip.linphone.org", Qt::CaseInsensitive) || domain.isEmpty())
+	QString assistantFile = (!QString::compare(domain, "sip.voip.com.vn", Qt::CaseInsensitive) || domain.isEmpty())
 	                            ? "use-app-sip-account.rc"
 	                            : "use-other-sip-account.rc";
 	auto account = createAccount(assistantFile);
@@ -84,8 +84,8 @@ bool AccountManager::login(QString username,
 	for (auto otherAccount : otherAccounts) {
 		auto otherParams = otherAccount->getParams();
 		if (domain.isEmpty()) {
-			lDebug() << "domain is empty, setting \"sip.linphone.org\" by default";
-			domain = "sip.linphone.org";
+			lDebug() << "domain is empty, setting \"sip.voip.com.vn\" by default";
+			domain = "sip.voip.com.vn";
 		}
 		if (!QString::compare(Utils::coreStringToAppString(otherParams->getIdentityAddress()->getUsername()), username,
 		                      Qt::CaseInsensitive) &&

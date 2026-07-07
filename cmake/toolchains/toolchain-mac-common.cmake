@@ -103,4 +103,4 @@ set(CMAKE_NM "${TOOLCHAIN_NM}" CACHE FILEPATH "nm")
 set(CMAKE_FIND_ROOT_PATH ${CMAKE_OSX_SYSROOT} ${CMAKE_INSTALL_PREFIX})
 
 #important: the GUI identifier is required so that executables can be launched on simulators
-set(MACOSX_BUNDLE_GUI_IDENTIFIER "org.linphone.\${PRODUCT_NAME:identifier}")
+set(MACOSX_BUNDLE_GUI_IDENTIFIER "com.zlink.zphone.\${PRODUCT_NAME:identifier}")

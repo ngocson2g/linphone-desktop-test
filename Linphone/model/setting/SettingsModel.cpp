@@ -863,7 +863,7 @@ void SettingsModel::setShortcuts(const QVariantList &data) {
 
 QString SettingsModel::getDefaultDomain() const {
 	return Utils::coreStringToAppString(
-	    mConfig->getString(SettingsModel::AppSection, "default_domain", "sip.linphone.org"));
+	    mConfig->getString(SettingsModel::AppSection, "default_domain", "sip.voip.com.vn"));
 }
 
 QString SettingsModel::getCallForwardToAddress() const {

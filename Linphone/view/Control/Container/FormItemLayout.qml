@@ -28,17 +28,17 @@ FocusScope{
 		var item = mainItem
 		do {
 			var parentItem = item.parent 
-			if (parentItem.contentItem) {
-                var itemPosInParent = mainItem.mapToItem(parentItem.contentItem, mainItem.x, mainItem.y)
+			if (parentItem && parentItem.contentItem) {
+                var itemPosInParent = mainItem.mapToItem(parentItem.contentItem, 0, 0)
                 if (parentItem.contentY > itemPosInParent.y) {
                     parentItem.contentY = itemPosInParent.y;
                 }
                 else if (parentItem.contentY+parentItem.height < itemPosInParent.y+mainItem.height) {
-                    parentItem.contentY = itemPosInParent.y + mainItem.height - height;
+                    parentItem.contentY = itemPosInParent.y + mainItem.height - parentItem.height;
                 }
 			}
 			item = parentItem
-		} while(item.parent != undefined && parentItem.contentItem === undefined)
+		} while(item && item.parent != undefined && parentItem.contentItem === undefined)
 	}
 
 	ColumnLayout {

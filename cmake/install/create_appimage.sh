@@ -102,6 +102,13 @@ fi
 ###########################################################################################
 
 export QMAKE=${QT_PATH}/bin/qmake
+if [ ! -x "$QMAKE" ]; then
+    if command -v qmake6 >/dev/null 2>&1; then
+        export QMAKE=$(command -v qmake6)
+    elif command -v qmake >/dev/null 2>&1; then
+        export QMAKE=$(command -v qmake)
+    fi
+fi
 export QML_SOURCES_PATHS=${QML_SOURCES_PATHS}:${WORK_DIR}/..
 export LD_LIBRARY_PATH=${QT_PATH}/lib:${BIN_SOURCE_DIR}/lib:${BIN_SOURCE_DIR}/lib64
 #export EXTRA_QT_PLUGINS=webenginecore;webview;webengine

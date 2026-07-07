@@ -152,8 +152,10 @@ void AccountDeviceList::setSelf(QSharedPointer<AccountDeviceList> me) {
 				    lDebug() << "REQUEST ERROR" << errorMessage << "/" << int(request->getType());
 				    QString message = QString::fromStdString(errorMessage);
 				    if (request->getType() == linphone::AccountManagerServicesRequest::Type::GetDevicesList) {
-					    //: "Erreur lors de la récupération des appareils"
-					    message = tr("manage_account_no_device_found_error_message");
+					    // Silently ignore device list errors for custom SIP servers
+					    // that do not support Account Manager Services API
+					    lDebug() << "[AccountDeviceList] Ignoring device list error (unsupported by server)";
+					    return;
 				    }
 				    emit requestError(message);
 			    });

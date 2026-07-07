@@ -45,7 +45,8 @@ LoginLayout {
 					scaleLettersFactor: 1.1
 				}
 				Text {
-					text: "don't have, take one from <a href='https://voip.com.vn' style='color:#00AFF0;text-decoration:none;'>ZLINK</a>"
+					textFormat: Text.RichText
+					text: "don't have, take one from <a href='https://voip.com.vn/document/getsipacc.html' style='color:#00AFF0;text-decoration:none;'><font color='orange'>Z</font>LINK</a>"
 					color: DefaultStyle.grey_900
 					font {
 						pixelSize: Typography.p1.pixelSize
@@ -105,7 +106,7 @@ LoginLayout {
 						id: openLinkButton
 						Layout.alignment: Qt.AlignCenter
 						Layout.topMargin: Utils.getSizeWithScreenRatio(18)
-						text: "linphone.org/contact"
+						text: "voip.com.vn/contact"
 						style: ButtonStyle.secondary
 						onClicked: { Qt.openUrlExternally(ConstantsCpp.ContactUrl) }
 					}

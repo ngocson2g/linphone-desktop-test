@@ -196,7 +196,7 @@ if(APPLE)
 	configure_file("${CMAKE_SOURCE_DIR}/cmake/install/macos/Info.plist.in" "${CMAKE_BINARY_DIR}/cmake/install/macos/Info.plist" @ONLY)
 endif()
 set_target_properties(${TARGET_NAME} PROPERTIES
-    MACOSX_BUNDLE_GUI_IDENTIFIER org.linphone
+    MACOSX_BUNDLE_GUI_IDENTIFIER com.zlink.zphone
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
@@ -235,6 +235,10 @@ endforeach()
 if (WIN32)
 	target_link_libraries(${TARGET_NAME} PRIVATE runtimeobject)
 	target_link_libraries(${TARGET_NAME} PRIVATE shlwapi propsys shell32)
+endif()
+
+if(UNIX AND NOT APPLE)
+	target_link_options(${TARGET_NAME} PRIVATE "-lldap" "-llber")
 endif()
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/config.h.cmake" "${CMAKE_CURRENT_BINARY_DIR}/config.h")

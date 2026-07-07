@@ -57,10 +57,10 @@ public:
 	static constexpr int VersionUpdateCheckInterval = 86400000; // 24 hours in milliseconds.
 #endif                                                          // ifdef ENABLE_UPDATE_CHECK
 
-	static constexpr char DefaultXmlrpcUri[] = "https://subscribe.linphone.org:444/wizard.php";
+	static constexpr char DefaultXmlrpcUri[] = "https://voip.com.vn/wizard.php";
 	static constexpr char DefaultUploadLogsServer[] =
-	    "https://files.linphone.org:443/http-file-transfer-server/hft.php";
-	static constexpr char RetiredUploadLogsServer[] = "https://www.linphone.org:444/lft.php";
+	    "https://voip.com.vn/http-file-transfer-server/hft.php";
+	static constexpr char RetiredUploadLogsServer[] = "https://voip.com.vn/lft.php";
 	static constexpr char DefaultContactParameters[] = "message-expires=2419200";
 	static constexpr char DefaultContactParametersOnRemove[] = "message-expires=0";
 	static constexpr int DefaultExpires = 600;
@@ -70,7 +70,7 @@ public:
 	static constexpr char VersionCheckNightlyUrl[] = "https://voip.com.vn";
 	static constexpr char PasswordRecoveryUrl[] = "https://voip.com.vn";
 	static constexpr char CguUrl[] = "https://voip.com.vn";
-	static constexpr char PrivatePolicyUrl[] = "https://voip.com.vn";
+	static constexpr char PrivatePolicyUrl[] = "https://voip.com.vn/document/privacy_policy_en.html";
 	static constexpr char ContactUrl[] = "https://voip.com.vn";
 	static constexpr char TranslationUrl[] = "https://voip.com.vn";
 
@@ -79,11 +79,11 @@ public:
 
 	static constexpr char LinphoneBZip2_exe[] = "https://www.linphone.org/releases/windows/tools/bzip2/bzip2.exe";
 	static constexpr char LinphoneBZip2_dll[] = "https://www.linphone.org/releases/windows/tools/bzip2/bzip2.dll";
-	static constexpr char DefaultRlsUri[] = "sips:rls@sip.linphone.org";
-	static constexpr char DefaultLogsEmail[] = "linphone-desktop@belledonne-communications.com";
+	static constexpr char DefaultRlsUri[] = "sips:rls@sip.voip.com.vn";
+	static constexpr char DefaultLogsEmail[] = "support@voip.com.vn";
 
-	static constexpr char DefaultFlexiAPIURL[] = "https://subscribe.linphone.org/api/"; // Need "/" at the end
-	static constexpr char RemoteProvisioningURL[] = "https://subscribe.linphone.org/api/provisioning";
+	static constexpr char DefaultFlexiAPIURL[] = "https://voip.com.vn/api/"; // Need "/" at the end
+	static constexpr char RemoteProvisioningURL[] = "https://voip.com.vn/api/provisioning";
 	static constexpr char RemoteProvisioningBasicAuth[] = "";
 	// OAuth2 settings
 	static constexpr char OAuth2AuthorizationUrl[] = "";
@@ -110,10 +110,10 @@ public:
 	    "(sip|sips):[[:alnum:]]+[.]*[[[:alnum:]]+[.]*[[:alnum:]]+]*:?[0-9]*?;transport=(tls|tcp|udp|dtls)");
 
 	// For Webviews
-	static constexpr char DefaultAssistantRegistrationUrl[] = "https://subscribe.linphone.org/register";
-	static constexpr char DefaultAssistantLoginUrl[] = "https://subscribe.linphone.org/login";
-	static constexpr char DefaultAssistantLogoutUrl[] = "https://subscribe.linphone.org/logout";
-	static constexpr char DefaultRouteAddress[] = "sip:sip.linphone.org;transport=tls";
+	static constexpr char DefaultAssistantRegistrationUrl[] = "https://voip.com.vn/register";
+	static constexpr char DefaultAssistantLoginUrl[] = "https://voip.com.vn/login";
+	static constexpr char DefaultAssistantLogoutUrl[] = "https://voip.com.vn/logout";
+	static constexpr char DefaultRouteAddress[] = "sip:sip.voip.com.vn;transport=tls";
 
 	//--------------
 
@@ -127,16 +127,16 @@ public:
 	//								LINPHONE
 	//--------------------------------------------------------------------------------
 
-	static constexpr char LinphoneDomain[] = "sip.linphone.org"; // Use for checking if config are a Linphone
+	static constexpr char LinphoneDomain[] = "sip.voip.com.vn"; // Use for checking if config are a Linphone
 	static constexpr char WindowIconPath[] = ":/data/image/logo.svg";
 	static constexpr char AppIconsPath[] = ":/data/image/";
 	static constexpr char ApplicationMinimalQtVersion[] = "6.10.0";
 	static constexpr char DefaultConferenceURI[] =
-	    "sip:conference-factory@sip.linphone.org"; // Default for a Linphone account
+	    "sip:conference-factory@sip.voip.com.vn"; // Default for a Linphone account
 	static constexpr char DefaultVideoConferenceURI[] =
-	    "sip:videoconference-factory@sip.linphone.org"; // Default for a Linphone account
+	    "sip:videoconference-factory@sip.voip.com.vn"; // Default for a Linphone account
 	static constexpr char DefaultLimeServerURL[] =
-	    "https://lime.linphone.org/lime-server/lime-server.php"; // Default for a Linphone account
+	    "https://voip.com.vn/lime-server/lime-server.php"; // Default for a Linphone account
 
 	static constexpr char PathAssistantConfig[] = "/" EXECUTABLE_NAME "/assistant/";
 	static constexpr char PathAvatars[] = "/avatars/";

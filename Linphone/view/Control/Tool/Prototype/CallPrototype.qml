@@ -134,7 +134,7 @@ Window {
 				Button{
 					text: 'Call'
 					onClicked: {
-						var address = usernameToCall.text + "@sip.linphone.org"
+						var address = usernameToCall.text + "@sip.voip.com.vn"
 						console.log("Calling "+address)
 						UtilsCpp.createCall(address)
 						proto.component1 = comp

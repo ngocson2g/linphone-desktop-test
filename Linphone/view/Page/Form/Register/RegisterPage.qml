@@ -154,7 +154,7 @@ LoginLayout {
                                     Layout.preferredWidth: Utils.getSizeWithScreenRatio(210)
                                     Layout.preferredHeight: Utils.getSizeWithScreenRatio(49)
 									enabled: false
-									model: [{text:"@sip.linphone.org"}]
+									model: [{text:"@sip.voip.com.vn"}]
 									accessibleLabel: qsTr("domain")
 								}
 								EffectImage {

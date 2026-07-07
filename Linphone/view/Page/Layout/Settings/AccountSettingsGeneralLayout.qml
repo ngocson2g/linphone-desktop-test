@@ -219,7 +219,7 @@ AbstractSettingsLayout {
 						mainWin.showConfirmationLambdaPopup("",
                             //: "Se déconnecter du compte ?"
                             qsTr("manage_account_dialog_remove_account_title"),
-                            //: Si vous souhaitez supprimer définitivement votre compte rendez-vous sur : https://sip.linphone.org
+                            //: Si vous souhaitez supprimer définitivement votre compte rendez-vous sur : https://sip.voip.com.vn
                             qsTr("manage_account_dialog_remove_account_message"),
 							function (confirmed) {
 								if (confirmed) {
