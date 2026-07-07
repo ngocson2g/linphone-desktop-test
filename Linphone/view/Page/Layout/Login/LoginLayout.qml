@@ -8,6 +8,7 @@ import QtQuick.Controls.Basic as Control
 
 import Linphone
 import ConstantsCpp
+import QtQuick.Effects
 import 'qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js' as Utils
 import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
 
@@ -243,6 +244,173 @@ Rectangle {
             Layout.topMargin: Math.max(Utils.getSizeWithScreenRatio(15), Utils.getSizeWithScreenRatio(70 - ((70/(DefaultStyle.defaultHeight - mainWindow.minimumHeight))*(DefaultStyle.defaultHeight-mainWindow.height))))
             Layout.alignment: Qt.AlignBottom
 
+            property int currentDesignOption: 2
+
+            Timer {
+                id: autoSwapTimer
+                interval: 5000 // Swap every 5 seconds
+                running: true
+                repeat: true
+                onTriggered: {
+                    centerLayout.currentDesignOption = (centerLayout.currentDesignOption + 1) % 3;
+                }
+            }
+
+			GlassmorphismFeatureCard {
+                id: option1Container
+				visible: centerLayout.currentDesignOption === 0
+				anchors.verticalCenter: parent.verticalCenter
+				anchors.verticalCenterOffset: -Utils.getSizeWithScreenRatio(80)
+				anchors.right: parent.right
+				anchors.rightMargin: Utils.getSizeWithScreenRatio(150)
+			}
+
+            Item {
+                id: premiumIllustrationContainer
+                visible: centerLayout.currentDesignOption === 1
+                anchors.verticalCenter: parent.verticalCenter
+				anchors.right: parent.right
+				anchors.rightMargin: Utils.getSizeWithScreenRatio(100)
+				width: Utils.getSizeWithScreenRatio(450)
+				height: Utils.getSizeWithScreenRatio(450)
+
+                SequentialAnimation on anchors.verticalCenterOffset {
+                    loops: Animation.Infinite
+                    NumberAnimation { to: -15; duration: 4000; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: 15; duration: 4000; easing.type: Easing.InOutSine }
+                }
+
+                Rectangle {
+                    id: imageMask
+                    anchors.centerIn: parent
+                    width: parent.width * 0.95
+                    height: parent.height * 0.95
+                    radius: width / 2
+                    color: "black"
+                    visible: false
+                    // Soft edges
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        blurEnabled: true
+                        blurMax: 64
+                        blur: 1.0
+                    }
+                }
+
+                Image {
+                    id: premiumIllustration
+                    anchors.fill: parent
+                    source: AppIcons.loginIllustration
+                    fillMode: Image.PreserveAspectFit
+                    visible: false
+                }
+
+                ShaderEffect {
+                    anchors.fill: parent
+                    property var source: ShaderEffectSource { sourceItem: premiumIllustration }
+                    property var maskSource: ShaderEffectSource { sourceItem: imageMask }
+                    fragmentShader: 'qrc:/data/shaders/opacityMask.frag.qsb'
+                }
+            }
+
+            // OPTION 3: Artistic Gradient Text
+            Item {
+                id: option3Container
+                visible: centerLayout.currentDesignOption === 2
+
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: Utils.getSizeWithScreenRatio(150)
+                width: option3Col.width
+                height: option3Col.height
+
+                SequentialAnimation on anchors.verticalCenterOffset {
+                    loops: Animation.Infinite
+                    NumberAnimation { to: -10; duration: 5000; easing.type: Easing.InOutQuad }
+                    NumberAnimation { to: 10; duration: 5000; easing.type: Easing.InOutQuad }
+                }
+
+                ColumnLayout {
+                    id: option3Col
+                    spacing: Utils.getSizeWithScreenRatio(20)
+
+                    Item {
+                        Layout.preferredWidth: textMask.width
+                        Layout.preferredHeight: textMask.height
+                        Layout.alignment: Qt.AlignRight
+
+                        Rectangle {
+                            id: gradientRect
+                            width: textMask.width
+                            height: textMask.height
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0.0; color: "#00C6FF" } // Light Cyan
+                                GradientStop { position: 1.0; color: "#0072FF" } // Deep Blue
+                            }
+                            visible: false
+                        }
+
+                        Text {
+                            id: textMask
+                            text: "WELCOME\nTO ZPHONE"
+                            font.pixelSize: Utils.getSizeWithScreenRatio(70)
+                            font.weight: Font.Black
+                            horizontalAlignment: Text.AlignRight
+                            lineHeight: 0.9
+                            visible: false
+                        }
+
+                        ShaderEffect {
+                            width: gradientRect.width
+                            height: gradientRect.height
+                            property var source: ShaderEffectSource { sourceItem: gradientRect }
+                            property var maskSource: ShaderEffectSource { sourceItem: textMask }
+                            fragmentShader: 'qrc:/data/shaders/opacityMask.frag.qsb'
+                        }
+                    }
+
+                    Text {
+                        text: "Kết nối không giới hạn, vươn tầm cao mới."
+                        color: DefaultStyle.grey_500
+                        font.pixelSize: Typography.h3.pixelSize
+                        Layout.alignment: Qt.AlignRight
+                    }
+                }
+            }
+
+            // Design Option Switcher (Dot Pagination)
+            Row {
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: Utils.getSizeWithScreenRatio(30)
+                anchors.right: parent.right
+                anchors.rightMargin: Utils.getSizeWithScreenRatio(150)
+                spacing: Utils.getSizeWithScreenRatio(15)
+                z: 10
+
+                Repeater {
+                    model: 3
+                    Rectangle {
+                        width: centerLayout.currentDesignOption === index ? Utils.getSizeWithScreenRatio(24) : Utils.getSizeWithScreenRatio(12)
+                        height: Utils.getSizeWithScreenRatio(12)
+                        radius: height / 2
+                        color: centerLayout.currentDesignOption === index ? DefaultStyle.main2_500 : DefaultStyle.grey_300
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            anchors.margins: -Utils.getSizeWithScreenRatio(10) // Larger hit area
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                centerLayout.currentDesignOption = index;
+                                autoSwapTimer.restart(); // Restart timer so it doesn't swap immediately after user clicks
+                            }
+                        }
+                        
+                        Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                        Behavior on color { ColorAnimation { duration: 250 } }
+                    }
+                }
+            }
 		}
 		Image {
 			id: bottomMountains

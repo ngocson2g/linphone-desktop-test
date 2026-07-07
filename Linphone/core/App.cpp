@@ -882,7 +882,8 @@ void App::initCore() {
 							                Qt::SingleShotConnection);
 						        }
 					        }
-					        if (mSettings->autoCheckForUpdateOnStart()) checkForUpdate();
+					        // ZPHONE: Disable checking for updates on Linphone servers.
+					        // if (mSettings->autoCheckForUpdateOnStart()) checkForUpdate();
 					        setIsRestarting(false);
 					        window->show();
 					        window->requestActivate();
