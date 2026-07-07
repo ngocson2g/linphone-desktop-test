@@ -2,7 +2,9 @@ pragma Singleton
 import QtQuick
 
 QtObject {
+	property string loginIllustration: "image://internal/zphone_login_illustration.png"
 	property string welcomeLinphoneLogo: "image://internal/zphone_app_icon.png"
+	property string welcomeIllustration: "image://internal/zlink_welcome_illustration.png"
 	property string logo: "image://internal/zphone_app_icon.png"
 	property string welcomeLock: "image://internal/secured.svg"
 	property string lock: "image://internal/lock.svg"

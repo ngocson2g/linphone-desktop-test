@@ -15,6 +15,7 @@ AbstractMainPage {
     //: "Aucune conversation"
     emptyListText: qsTr("chat_empty_title")
     newItemIconSource: AppIcons.plusCircle
+    hasData: listStackView.currentItem && listStackView.currentItem.objectName === "chatListItem" ? listStackView.currentItem.listView.count > 0 : false
 
     /**
      * Focus on the first pertinent element in the page (LINQT-2202)
@@ -84,10 +85,9 @@ AbstractMainPage {
     onNoItemButtonPressed: goToNewChat()
     signal newChatItemOpen()
 
-    showDefaultItem: listStackView.currentItem
-                     && listStackView.currentItem.objectName == "chatListItem"
-                     && listStackView.currentItem.listView.count === 0
-                     && !listStackView.currentItem.listView.loading || false
+    showDefaultItem: mainItem.selectedChatGui === null
+                     && listStackView.currentItem
+                     && listStackView.currentItem.objectName === "chatListItem"
 
     function goToNewChat() {
         if (listStackView.currentItem

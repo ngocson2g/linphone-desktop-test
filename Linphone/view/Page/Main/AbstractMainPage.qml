@@ -13,9 +13,12 @@ import "qrc:/qt/qml/Linphone/view/Control/Tool/Helper/utils.js" as Utils
 
 FocusScope {
 	id: mainItem
+	property bool hasData: false
 	property string noItemButtonText
 	property string newItemIconSource
 	property string emptyListText
+	property Component emptyStateComponent: welcomeIllustrationComponent
+	property Component statusStateComponent: statusClockWidgetComponent
 	property bool showDefaultItem: true
 	property color rightPanelColor: DefaultStyle.grey_100
 	property alias leftPanelContent: leftPanel.children
@@ -50,6 +53,8 @@ FocusScope {
 			Control.SplitView.fillWidth: true
 			Control.SplitView.fillHeight: true
 
+
+
 			StackLayout {
 				currentIndex: mainItem.showDefaultItem ? 0 : 1
 				anchors.fill: parent
@@ -63,23 +68,48 @@ FocusScope {
 						}
 						ColumnLayout {
                             spacing: Utils.getSizeWithScreenRatio(30)
-							Item {
+							Loader {
+								Layout.alignment: Qt.AlignHCenter
+								Layout.fillWidth: true
 								Layout.fillHeight: true
+								sourceComponent: mainItem.hasData ? mainItem.statusStateComponent : mainItem.emptyStateComponent
 							}
-							Image {
-								Layout.alignment: Qt.AlignHCenter
-								source: AppIcons.noItemImage
-                                Layout.preferredWidth: Utils.getSizeWithScreenRatio(359)
-                                Layout.preferredHeight: Utils.getSizeWithScreenRatio(314)
-								fillMode: Image.PreserveAspectFit
-							}
-							Text {
-								text: mainItem.emptyListText
-								Layout.alignment: Qt.AlignHCenter
-								font {
-                                    pixelSize: Typography.h3.pixelSize
-                                    weight: Typography.h3.weight
+
+							Component {
+								id: welcomeIllustrationComponent
+								ColumnLayout {
+									spacing: Utils.getSizeWithScreenRatio(15)
+									Image {
+										Layout.alignment: Qt.AlignHCenter
+										source: AppIcons.welcomeIllustration
+										Layout.preferredWidth: Utils.getSizeWithScreenRatio(500)
+										Layout.preferredHeight: Utils.getSizeWithScreenRatio(500)
+										fillMode: Image.PreserveAspectFit
+									}
+									Text {
+										text: "Welcome to Zphone."
+										Layout.alignment: Qt.AlignHCenter
+										color: DefaultStyle.main2_600
+										font {
+											pixelSize: Typography.h1.pixelSize
+											weight: Typography.h1.weight
+										}
+									}
+									Text {
+										text: mainItem.emptyListText
+										Layout.alignment: Qt.AlignHCenter
+										color: DefaultStyle.main2_400
+										font {
+											pixelSize: Typography.h3.pixelSize
+											weight: Typography.h3.weight
+										}
+									}
 								}
+							}
+
+							Component {
+								id: statusClockWidgetComponent
+								StatusClockWidget {}
 							}
 							BigButton {
 								Layout.alignment: Qt.AlignHCenter

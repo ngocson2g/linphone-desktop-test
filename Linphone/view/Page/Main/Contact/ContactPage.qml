@@ -17,6 +17,18 @@ AbstractMainPage {
     //: "Aucun contact pour le moment"
     emptyListText: qsTr("contacts_list_empty")
     newItemIconSource: AppIcons.plusCircle
+    hasData: contactList.haveContacts
+
+    Component {
+        id: contactDashboardComponent
+        SoftphoneDashboard {
+            anchors.centerIn: parent
+            visible: true
+            onRequestNewCall: mainWindow.goToNewCall()
+        }
+    }
+    emptyStateComponent: contactDashboardComponent
+    statusStateComponent: contactDashboardComponent
 
     /**
      * Focus on the first pertinent element in the page (LINQT-2202)
@@ -106,8 +118,7 @@ AbstractMainPage {
     }
 
     // rightPanelStackView.initialItem: contactDetail
-    showDefaultItem: rightPanelStackView.depth == 0 && !contactList.haveContacts
-                     && searchBar.text.length === 0
+    showDefaultItem: rightPanelStackView.depth == 0 && searchBar.text.length === 0
 
     function deleteContact(contact) {
         if (!contact)

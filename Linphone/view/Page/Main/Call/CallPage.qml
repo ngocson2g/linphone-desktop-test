@@ -12,9 +12,19 @@ AbstractMainPage {
     id: mainItem
     //: "Nouvel appel"
     noItemButtonText: qsTr("history_call_start_title")
-    //: "Historique d'appel vide"
     emptyListText: qsTr("call_history_empty_title")
+    Component {
+        id: callDashboardComponent
+        SoftphoneDashboard {
+            anchors.centerIn: parent
+            visible: true
+            onRequestNewCall: mainWindow.goToNewCall()
+        }
+    }
+    emptyStateComponent: callDashboardComponent
+    statusStateComponent: callDashboardComponent
     newItemIconSource: AppIcons.newCall
+    hasData: listStackView.currentItem && listStackView.currentItem.objectName === "historyListItem" ? listStackView.currentItem.listView.count > 0 : false
 
     property var selectedRowHistoryGui
     signal listViewUpdated
@@ -70,9 +80,9 @@ AbstractMainPage {
 
     onNoItemButtonPressed: goToNewCall()
 
-    showDefaultItem: listStackView.currentItem
-                     && listStackView.currentItem.objectName == "historyListItem"
-                     && listStackView.currentItem.listView.count === 0 || false
+    showDefaultItem: !selectedRowHistoryGui
+                     && listStackView.currentItem
+                     && (listStackView.currentItem.objectName === "historyListItem" || listStackView.currentItem.objectName === "newCallItem")
 
     function goToNewCall() {
         if (listStackView.currentItem
@@ -112,7 +122,7 @@ AbstractMainPage {
             anchors.fill: parent
             anchors.leftMargin: Utils.getSizeWithScreenRatio(45)
             clip: true
-            initialItem: newCallItem
+            initialItem: historyListItem
             focus: true
             onActiveFocusChanged: if (activeFocus) {
                 currentItem.forceActiveFocus()

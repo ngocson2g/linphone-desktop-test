@@ -146,8 +146,12 @@ list(APPEND _LINPHONEAPP_QML_FILES
 	view/Page/Form/Settings/AccountSettingsPage.qml
 	view/Page/Form/Settings/SettingsPage.qml
 
+	view/Page/Layout/Login/GlassmorphismFeatureCard.qml
 	view/Page/Layout/Login/LoginLayout.qml
 	view/Page/Layout/Main/MainLayout.qml
+	view/Page/Layout/Main/StatusClockWidget.qml
+	view/Page/Layout/Main/AudioVisualizer.qml
+	view/Page/Layout/Main/SoftphoneDashboard.qml
 	view/Page/Layout/Settings/AbstractSettingsLayout.qml
 	view/Page/Layout/Settings/AccountSettingsGeneralLayout.qml
 	view/Page/Layout/Settings/AccountSettingsParametersLayout.qml
