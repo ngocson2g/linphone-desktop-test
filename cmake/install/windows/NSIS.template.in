@@ -775,6 +775,9 @@ Section "-Core installation"
 @CPACK_NSIS_CREATE_ICONS@
 @CPACK_NSIS_CREATE_ICONS_EXTRA@
   CreateShortCut "$SMPROGRAMS\$STARTMENU_FOLDER\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+  
+  StrCmp $INSTALL_DESKTOP "1" 0 +2
+    CreateShortCut "$DESKTOP\@CPACK_NSIS_DISPLAY_NAME@.lnk" "$INSTDIR\bin\@CPACK_NSIS_MUI_FINISHPAGE_RUN@"
 
   ;Read a value from an InstallOptions INI file
   !insertmacro MUI_INSTALLOPTIONS_READ $DO_NOT_ADD_TO_PATH "NSIS.InstallOptions.ini" "Field 2" "State"
@@ -935,6 +938,7 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\$MUI_TEMP\Uninstall.lnk"
 @CPACK_NSIS_DELETE_ICONS@
 @CPACK_NSIS_DELETE_ICONS_EXTRA@
+  Delete "$DESKTOP\@CPACK_NSIS_DISPLAY_NAME@.lnk"
 
   ;Delete empty start menu parent diretories
   StrCpy $MUI_TEMP "$SMPROGRAMS\$MUI_TEMP"

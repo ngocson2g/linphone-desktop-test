@@ -81,7 +81,7 @@ AbstractWindow {
 				openMainPage()
 				mainWindowStackView.currentItem.goToNewCall()
 			}
-            else if (SettingsCpp.getFirstLaunch()) mainWindowStackView.replace(welcomePage, StackView.Immediate)
+            //else if (SettingsCpp.getFirstLaunch()) mainWindowStackView.replace(welcomePage, StackView.Immediate)
             else mainWindowStackView.replace(sipLoginPage, StackView.Immediate)
         }
     }
