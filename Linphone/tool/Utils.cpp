@@ -2338,10 +2338,6 @@ void Utils::forceCrash() {
 
 QVariantMap Utils::importContactsFromCsv(const QString &filePath) {
 	QVariantMap result;
-	int successCount = 0;
-	int duplicateCount = 0;
-	QStringList duplicateNames;
-
 	QString actualPath = filePath;
 	if (actualPath.startsWith("file://")) {
 		actualPath = QUrl(actualPath).toLocalFile();
@@ -2354,6 +2350,17 @@ QVariantMap Utils::importContactsFromCsv(const QString &filePath) {
 	}
 
 	QTextStream in(&file);
+	QString csvContent = in.readAll();
+	file.close();
+
+	return importContactsFromCsvText(csvContent, "[CSV]");
+}
+
+QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QString &sourceTag) {
+	QVariantMap result;
+	int successCount = 0;
+	int duplicateCount = 0;
+	QStringList duplicateNames;
 
 	auto core = CoreModel::getInstance()->getCore();
 	auto appFriends = ToolModel::getAppFriendList();
@@ -2362,9 +2369,11 @@ QVariantMap Utils::importContactsFromCsv(const QString &filePath) {
 		return result;
 	}
 
+	QStringList lines = csvContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+
 	bool firstLine = true;
-	while (!in.atEnd()) {
-		QString line = in.readLine().trimmed();
+	for (const QString &rawLine : lines) {
+		QString line = rawLine.trimmed();
 		if (line.isEmpty()) continue;
 
 		QStringList parts = line.split(',');
@@ -2431,9 +2440,12 @@ QVariantMap Utils::importContactsFromCsv(const QString &filePath) {
 						}
 
 						vcard->removeExtentedPropertiesByName("X-NOTE");
-						QString newNote = note;
-						if (!currentNote.isEmpty() && !currentNote.contains(note)) {
-							newNote = currentNote + "\n[CSV]: " + note;
+						QString newNote = currentNote;
+						if (!currentNote.contains(note)) {
+							if (!newNote.isEmpty()) {
+								newNote += "\n";
+							}
+							newNote += sourceTag + ": " + note;
 						}
 						QString escapedNote = newNote;
 						escapedNote.replace("\n", "\\n");

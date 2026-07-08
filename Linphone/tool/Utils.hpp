@@ -147,6 +147,7 @@ public:
 	Q_INVOKABLE static QString boldTextPart(const QString &text, const QString &regex);
 	Q_INVOKABLE static QString getFileChecksum(const QString &filePath);
 	Q_INVOKABLE static QVariantMap importContactsFromCsv(const QString &filePath);
+	Q_INVOKABLE static QVariantMap importContactsFromCsvText(const QString &csvContent, const QString &sourceTag = "[CSV]");
 	Q_INVOKABLE static QList<QVariant> append(const QList<QVariant> a, const QList<QVariant> b);
 	Q_INVOKABLE static QString getAddressToDisplay(QVariantList addressList, QString filter, QString defaultAddress);
 	Q_INVOKABLE static QColor getPresenceColor(LinphoneEnums::Presence presence);

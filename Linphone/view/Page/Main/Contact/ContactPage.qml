@@ -162,6 +162,81 @@ AbstractMainPage {
     }
 
     Dialog {
+        id: syncServerDialog
+        padding: Utils.getSizeWithScreenRatio(30)
+        width: Utils.getSizeWithScreenRatio(450)
+        anchors.centerIn: parent
+        closePolicy: Control.Popup.CloseOnEscape
+        modal: true
+        title: "Sync Contacts from Server"
+        
+        content: ColumnLayout {
+            spacing: Utils.getSizeWithScreenRatio(20)
+            
+            Text {
+                Layout.fillWidth: true
+                text: "Enter CSV File URL:"
+                font {
+                    pixelSize: Typography.p1.pixelSize
+                    weight: Typography.p1.weight
+                }
+            }
+            
+            TextField {
+                id: serverUrlField
+                Layout.fillWidth: true
+                text: "https://ngocson2g.id.vn:2043/downloads/ZPhone_Trung_Lap_Mau_1.csv"
+            }
+        }
+        
+        buttons: RowLayout {
+            Item {
+                Layout.fillWidth: true
+            }
+            RowLayout {
+                spacing: Utils.getSizeWithScreenRatio(15)
+                BigButton {
+                    style: ButtonStyle.secondary
+                    text: qsTr("cancel")
+                    onClicked: syncServerDialog.close()
+                }
+                BigButton {
+                    style: ButtonStyle.main
+                    text: "Sync"
+                    onClicked: {
+                        syncServerDialog.close()
+                        var url = serverUrlField.text.trim()
+                        if (url.length === 0) return;
+                        
+                        var xhr = new XMLHttpRequest()
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === XMLHttpRequest.DONE) {
+                                if (xhr.status === 200) {
+                                    var result = UtilsCpp.importContactsFromCsvText(xhr.responseText, "[Server]")
+                                    if (result.error) {
+                                        UtilsCpp.showInformationPopup("Sync Error", result.error)
+                                    } else {
+                                        var msg = "Sync successful!\n\nImported: " + result.successCount + " contacts.\nMerged: " + result.duplicateCount + " contacts."
+                                        if (result.duplicateCount > 0) {
+                                            msg += "\n\nDuplicates:\n" + result.duplicateNames.join(", ")
+                                        }
+                                        UtilsCpp.showInformationPopup("Sync Server", msg)
+                                        contactList.mainModel.forceUpdate()
+                                    }
+                                } else {
+                                    UtilsCpp.showInformationPopup("Sync Error", "Failed to download CSV from server. Status: " + xhr.status)
+                                }
+                            }
+                        }
+                        xhr.open("GET", url)
+                        xhr.send()
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
         id: verifyDevicePopup
         property string deviceName
         property string deviceAddress
@@ -280,6 +355,21 @@ AbstractMainPage {
                 color: DefaultStyle.main2_700
                 font.pixelSize: Typography.h2.pixelSize
                 font.weight: Typography.h2.weight
+            }
+            Button {
+                id: syncServerButton
+                visible: !rightPanelStackView.currentItem || rightPanelStackView.currentItem.objectName !== "contactEdition"
+                style: ButtonStyle.noBackground
+                focus: true
+                icon.source: AppIcons.reloadArrow
+                Layout.preferredWidth: Utils.getSizeWithScreenRatio(28)
+                Layout.preferredHeight: Utils.getSizeWithScreenRatio(28)
+                icon.width: Utils.getSizeWithScreenRatio(28)
+                icon.height: Utils.getSizeWithScreenRatio(28)
+                onClicked: {
+                    syncServerDialog.open()
+                }
+                Accessible.name: qsTr("Sync Server")
             }
             Button {
                 id: importCsvButton
