@@ -182,7 +182,7 @@ int auGetDeviceSampleRate(AudioDeviceID dev, bool_t isRead, int *rate) {
 	AudioObjectPropertyScope inputScope = isRead ? kAudioDevicePropertyScopeInput : kAudioDevicePropertyScopeOutput;
 	AudioObjectPropertyAddress streamFormatAddress = {kAudioDevicePropertyStreamFormat, inputScope, 0};
 	AudioStreamBasicDescription format = {0};
-	UInt32 slen;
+	UInt32 slen = sizeof(format);
 	int err;
 
 	err = AudioObjectGetPropertyData(dev, &streamFormatAddress, 0, NULL, &slen, &format);
@@ -192,6 +192,7 @@ int auGetDeviceSampleRate(AudioDeviceID dev, bool_t isRead, int *rate) {
 	if (err == kAudioHardwareBadObjectError) {
 		ms_warning("[MSAU] Trying to get rate from bad ID %d", (int)dev);
 	} else if (err != kAudioHardwareNoError) { // Try another method
+		slen = sizeof(format);
 		AudioObjectPropertyAddress nominalSampleAddress = {kAudioDevicePropertyNominalSampleRate, inputScope,
 		                                                   kAudioObjectPropertyElementMaster};
 		err = AudioObjectGetPropertyData(dev, &nominalSampleAddress, 0, NULL, &slen, &format);
