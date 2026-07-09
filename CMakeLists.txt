@@ -291,4 +291,6 @@ endif()
 # endif()
 
 
-file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/hook/pre-commit" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/")
+if(IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks")
+	file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/cmake/hook/pre-commit" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/.git/hooks/")
+endif()
