@@ -85,6 +85,19 @@ Control.TabBar {
 			width: parent.width
 			height: parent.height/2
 		}
+
+		Image {
+			id: logoImage
+			anchors.bottom: parent.bottom
+			anchors.bottomMargin: Utils.getSizeWithScreenRatio(15)
+			anchors.horizontalCenter: parent.horizontalCenter
+			source: AppIcons.logo
+			sourceSize.width: Utils.getSizeWithScreenRatio(45)
+			sourceSize.height: Utils.getSizeWithScreenRatio(45)
+			width: Utils.getSizeWithScreenRatio(45)
+			height: Utils.getSizeWithScreenRatio(45)
+			fillMode: Image.PreserveAspectFit
+		}
 	}
 	
     Repeater {
