@@ -52,8 +52,10 @@ if(APPLE)
 	execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/share/" "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@CMAKE_INSTALL_DATAROOTDIR@/")
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/share/")
 	# move mkspecs
-	execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/mkspecs/" "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@CMAKE_INSTALL_DATAROOTDIR@/")
-	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/mkspecs/")
+	if(EXISTS "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/mkspecs/")
+		execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/mkspecs/" "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@CMAKE_INSTALL_DATAROOTDIR@/")
+		execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/mkspecs/")
+	endif()
 	# remove other folders
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/cmake/")
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/lib/")

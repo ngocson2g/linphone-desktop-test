@@ -151,7 +151,7 @@ endfunction()
 
 add_option(OPTION_LIST ENABLE_APP_LICENSE "Enable the license in packages." ON)
 add_option(OPTION_LIST ENABLE_APP_OAUTH2 "Build with OAuth2 support for remote provisioning." OFF) # Experimental.
-add_option(OPTION_LIST ENABLE_APP_PACKAGING "Enable packaging" OFF)
+add_option(OPTION_LIST ENABLE_APP_PACKAGING "Enable packaging" ON)
 add_option(OPTION_LIST ENABLE_APP_PACKAGE_ROOTCA "Embed the rootca file into the package" ON)
 add_option(OPTION_LIST ENABLE_APP_PDF_VIEWER "Enable Pdf viewer. Only enable if the version of Qt have the module. Cannot be activated because of Qt find_package() make an error on unbound pdf." OFF)
 add_option(OPTION_LIST ENABLE_APP_WEBVIEW "Enable webviews. Webview is not fully supported because of deployments. Used for subscription." OFF)
