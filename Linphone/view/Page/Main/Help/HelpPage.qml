@@ -258,9 +258,8 @@ AbstractMainPage {
 							Layout.fillWidth: true
 							text: "<a href='https://voip.com.vn' style='color:#00AFF0;'>voip.com.vn</a>"
 								+ " / <a href='https://azsoft.com' style='color:#00AFF0;'>azsoft.com</a>"
-							textFormat: Text.RichText
+							textFormat: Text.StyledText
 							font: Typography.p1
-							wrapMode: Text.WordWrap
 							onLinkActivated: (link) => Qt.openUrlExternally(link)
 							MouseArea {
 								anchors.fill: parent
@@ -296,9 +295,8 @@ AbstractMainPage {
 							Layout.fillWidth: true
 							text: "<a href='mailto:sales@voip.com.vn' style='color:#00AFF0;'>sales@voip.com.vn</a>"
 								+ " / <a href='mailto:sales@azsoft.com' style='color:#00AFF0;'>sales@azsoft.com</a>"
-							textFormat: Text.RichText
+							textFormat: Text.StyledText
 							font: Typography.p1
-							wrapMode: Text.WordWrap
 							onLinkActivated: (link) => Qt.openUrlExternally(link)
 							MouseArea {
 								anchors.fill: parent
@@ -309,16 +307,7 @@ AbstractMainPage {
 					}
 				}
 			}
-			Text {
-				Layout.leftMargin: innerColumn.leftMargin
-				Layout.rightMargin: innerColumn.rightMargin
-				Layout.topMargin: Utils.getSizeWithScreenRatio(32)
-				Layout.fillWidth: true
-				//: "À propos de %1"
-				text: qsTr("help_about_title").arg(applicationName)
-				color: DefaultStyle.main2_600
-				font: Typography.h4
-			}
+
 			HelpIconLabelButton {
 				id: troubleShooting
 				Layout.fillWidth: true
