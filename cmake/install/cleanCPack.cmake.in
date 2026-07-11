@@ -65,6 +65,11 @@ if(APPLE)
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/cmake/")
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/lib/")
 	
+	# Fix codesign errors by removing unneeded pkgconfig and static libs from the app bundle
+	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@APPLICATION_NAME@.app/Contents/Frameworks/pkgconfig/")
+	remove_file("${CPACK_TEMPORARY_INSTALL_DIRECTORY}/*.a")
+	remove_file("${CPACK_TEMPORARY_INSTALL_DIRECTORY}/*.pc")
+	
 	# Build dSYM files into package
 	# deploy qt dependencies
 	message(STATUS "Execute : @DEPLOYQT_PROGRAM@ ${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@APPLICATION_NAME@.app -qmldir=@LINPHONE_QML_DIR@ -no-strip -verbose=0 -always-overwrite")
