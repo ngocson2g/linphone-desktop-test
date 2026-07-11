@@ -115,8 +115,8 @@ AbstractMainPage {
 				}
 				RowLayout {
 					HelpIconLabelButton {
-						Layout.preferredWidth: width
-						Layout.minimumWidth: width
+						Layout.preferredWidth: implicitWidth
+						Layout.minimumWidth: implicitWidth
 						iconSource: AppIcons.info
 						//: "Version"
 						title: qsTr("help_about_version_title")
@@ -197,7 +197,6 @@ AbstractMainPage {
 							text: "Ha Noi, Viet Nam\nHCMC, Viet Nam"
 							color: DefaultStyle.main2_500_main
 							font: Typography.p1
-							wrapMode: Text.WordWrap
 						}
 					}
 				}
@@ -223,7 +222,6 @@ AbstractMainPage {
 							text: "Phone / MS Teams / WhatsApp\nTelegram / Zalo / WeChat"
 							color: DefaultStyle.main2_600
 							font: Typography.p2
-							wrapMode: Text.WordWrap
 						}
 						Text {
 							text: "+84988612049"
@@ -261,11 +259,6 @@ AbstractMainPage {
 							textFormat: Text.StyledText
 							font: Typography.p1
 							onLinkActivated: (link) => Qt.openUrlExternally(link)
-							MouseArea {
-								anchors.fill: parent
-								acceptedButtons: Qt.NoButton
-								cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
-							}
 						}
 					}
 				}
@@ -298,11 +291,6 @@ AbstractMainPage {
 							textFormat: Text.StyledText
 							font: Typography.p1
 							onLinkActivated: (link) => Qt.openUrlExternally(link)
-							MouseArea {
-								anchors.fill: parent
-								acceptedButtons: Qt.NoButton
-								cursorShape: parent.hoveredLink ? Qt.PointingHandCursor : Qt.ArrowCursor
-							}
 						}
 					}
 				}
