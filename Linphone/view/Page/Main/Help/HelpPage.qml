@@ -175,14 +175,13 @@ AbstractMainPage {
 				RowLayout {
 					Layout.fillWidth: true
 					spacing: Utils.getSizeWithScreenRatio(16)
-					EffectImage {
+					Image {
 						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
 						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
 						Layout.alignment: Qt.AlignTop
-						width: Utils.getSizeWithScreenRatio(32)
-						height: Utils.getSizeWithScreenRatio(32)
-						imageSource: AppIcons.adressBook
-						colorizationColor: DefaultStyle.main1_500_main
+						sourceSize.width: width
+						sourceSize.height: height
+						source: AppIcons.adressBook
 					}
 					ColumnLayout {
 						Layout.fillWidth: true
@@ -205,14 +204,13 @@ AbstractMainPage {
 				RowLayout {
 					Layout.fillWidth: true
 					spacing: Utils.getSizeWithScreenRatio(16)
-					EffectImage {
+					Image {
 						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
 						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
 						Layout.alignment: Qt.AlignTop
-						width: Utils.getSizeWithScreenRatio(32)
-						height: Utils.getSizeWithScreenRatio(32)
-						imageSource: AppIcons.phone
-						colorizationColor: DefaultStyle.main1_500_main
+						sourceSize.width: width
+						sourceSize.height: height
+						source: AppIcons.phone
 					}
 					ColumnLayout {
 						Layout.fillWidth: true
@@ -235,14 +233,13 @@ AbstractMainPage {
 				RowLayout {
 					Layout.fillWidth: true
 					spacing: Utils.getSizeWithScreenRatio(16)
-					EffectImage {
+					Image {
 						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
 						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
 						Layout.alignment: Qt.AlignTop
-						width: Utils.getSizeWithScreenRatio(32)
-						height: Utils.getSizeWithScreenRatio(32)
-						imageSource: AppIcons.globe
-						colorizationColor: DefaultStyle.main1_500_main
+						sourceSize.width: width
+						sourceSize.height: height
+						source: AppIcons.globe
 					}
 					ColumnLayout {
 						Layout.fillWidth: true
@@ -267,14 +264,13 @@ AbstractMainPage {
 				RowLayout {
 					Layout.fillWidth: true
 					spacing: Utils.getSizeWithScreenRatio(16)
-					EffectImage {
+					Image {
 						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
 						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
 						Layout.alignment: Qt.AlignTop
-						width: Utils.getSizeWithScreenRatio(32)
-						height: Utils.getSizeWithScreenRatio(32)
-						imageSource: AppIcons.envelope
-						colorizationColor: DefaultStyle.main1_500_main
+						sourceSize.width: width
+						sourceSize.height: height
+						source: AppIcons.envelope
 					}
 					ColumnLayout {
 						Layout.fillWidth: true
