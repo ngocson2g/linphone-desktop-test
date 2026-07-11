@@ -115,8 +115,6 @@ AbstractMainPage {
 				}
 				RowLayout {
 					HelpIconLabelButton {
-						Layout.preferredWidth: implicitWidth
-						Layout.minimumWidth: implicitWidth
 						iconSource: AppIcons.info
 						//: "Version"
 						title: qsTr("help_about_version_title")

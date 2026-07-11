@@ -17,8 +17,6 @@ Control.Control {
 	property alias image: image
 	property int titleLineCount: 1
 	signal clicked()
-	width: content.implicitWidth
-	height: content.implicitHeight
 	MouseArea {
 		id: mouseArea
 		anchors.fill: parent
