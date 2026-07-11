@@ -45,9 +45,6 @@ Control.Control {
 			colorizationColor: DefaultStyle.main1_500_main
 		}
 		ColumnLayout {
-			width: implicitWidth
-			Layout.preferredWidth: width
-			height: implicitHeight
             Layout.leftMargin: Utils.getSizeWithScreenRatio(16)
 			Text {
 				Layout.fillWidth: true
