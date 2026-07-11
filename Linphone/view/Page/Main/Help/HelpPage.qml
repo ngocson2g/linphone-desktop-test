@@ -164,132 +164,19 @@ AbstractMainPage {
 				color: DefaultStyle.main2_600
 				font: Typography.h4
 			}
-			ColumnLayout {
-				Layout.fillWidth: true
+			Text {
 				Layout.leftMargin: innerColumn.leftMargin
 				Layout.rightMargin: innerColumn.rightMargin
 				Layout.topMargin: Utils.getSizeWithScreenRatio(16)
-				spacing: Utils.getSizeWithScreenRatio(24)
-
-				// Address
-				RowLayout {
-					Layout.fillWidth: true
-					spacing: Utils.getSizeWithScreenRatio(16)
-					Image {
-						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
-						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
-						Layout.alignment: Qt.AlignTop
-						sourceSize.width: width
-						sourceSize.height: height
-						source: AppIcons.adressBook
-					}
-					ColumnLayout {
-						Layout.fillWidth: true
-						spacing: Utils.getSizeWithScreenRatio(2)
-						Text {
-							text: qsTr("Address")
-							color: DefaultStyle.main2_600
-							font: Typography.p2
-						}
-						Text {
-							Layout.fillWidth: true
-							text: "Ha Noi, Viet Nam\nHCMC, Viet Nam"
-							color: DefaultStyle.main2_500_main
-							font: Typography.p1
-						}
-					}
-				}
-
-				// Phone
-				RowLayout {
-					Layout.fillWidth: true
-					spacing: Utils.getSizeWithScreenRatio(16)
-					Image {
-						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
-						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
-						Layout.alignment: Qt.AlignTop
-						sourceSize.width: width
-						sourceSize.height: height
-						source: AppIcons.phone
-					}
-					ColumnLayout {
-						Layout.fillWidth: true
-						spacing: Utils.getSizeWithScreenRatio(2)
-						Text {
-							Layout.fillWidth: true
-							text: "Phone / MS Teams / WhatsApp\nTelegram / Zalo / WeChat"
-							color: DefaultStyle.main2_600
-							font: Typography.p2
-						}
-						Text {
-							text: "+84988612049"
-							color: DefaultStyle.main2_500_main
-							font: Typography.p1
-						}
-					}
-				}
-
-				// Web
-				RowLayout {
-					Layout.fillWidth: true
-					spacing: Utils.getSizeWithScreenRatio(16)
-					Image {
-						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
-						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
-						Layout.alignment: Qt.AlignTop
-						sourceSize.width: width
-						sourceSize.height: height
-						source: AppIcons.globe
-					}
-					ColumnLayout {
-						Layout.fillWidth: true
-						spacing: Utils.getSizeWithScreenRatio(2)
-						Text {
-							text: qsTr("Web")
-							color: DefaultStyle.main2_600
-							font: Typography.p2
-						}
-						Text {
-							Layout.fillWidth: true
-							text: "<a href='https://voip.com.vn' style='color:#00AFF0;'>voip.com.vn</a>"
-								+ " / <a href='https://azsoft.com' style='color:#00AFF0;'>azsoft.com</a>"
-							textFormat: Text.StyledText
-							font: Typography.p1
-							onLinkActivated: (link) => Qt.openUrlExternally(link)
-						}
-					}
-				}
-
-				// Email
-				RowLayout {
-					Layout.fillWidth: true
-					spacing: Utils.getSizeWithScreenRatio(16)
-					Image {
-						Layout.preferredWidth: Utils.getSizeWithScreenRatio(32)
-						Layout.preferredHeight: Utils.getSizeWithScreenRatio(32)
-						Layout.alignment: Qt.AlignTop
-						sourceSize.width: width
-						sourceSize.height: height
-						source: AppIcons.envelope
-					}
-					ColumnLayout {
-						Layout.fillWidth: true
-						spacing: Utils.getSizeWithScreenRatio(2)
-						Text {
-							text: qsTr("Email")
-							color: DefaultStyle.main2_600
-							font: Typography.p2
-						}
-						Text {
-							Layout.fillWidth: true
-							text: "<a href='mailto:sales@voip.com.vn' style='color:#00AFF0;'>sales@voip.com.vn</a>"
-								+ " / <a href='mailto:sales@azsoft.com' style='color:#00AFF0;'>sales@azsoft.com</a>"
-							textFormat: Text.StyledText
-							font: Typography.p1
-							onLinkActivated: (link) => Qt.openUrlExternally(link)
-						}
-					}
-				}
+				Layout.fillWidth: true
+				textFormat: Text.RichText
+				onLinkActivated: (link) => Qt.openUrlExternally(link)
+				text: "<b>Address:</b> Ha Noi, Viet Nam / HCMC, Viet Nam<br><br>" +
+					  "<b>Phone:</b> +84988612049<br><br>" +
+					  "<b>Web:</b> <a href=\"https://voip.com.vn\"><font color=\"#00AFF0\">voip.com.vn</font></a> / <a href=\"https://azsoft.com\"><font color=\"#00AFF0\">azsoft.com</font></a><br><br>" +
+					  "<b>Email:</b> <a href=\"mailto:sales@voip.com.vn\"><font color=\"#00AFF0\">sales@voip.com.vn</font></a> / <a href=\"mailto:sales@azsoft.com\"><font color=\"#00AFF0\">sales@azsoft.com</font></a>"
+				color: DefaultStyle.main2_600
+				font: Typography.p1
 			}
 
 			HelpIconLabelButton {

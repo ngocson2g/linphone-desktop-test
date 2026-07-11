@@ -68,8 +68,8 @@ if(APPLE)
 	# Fix codesign errors by removing unneeded pkgconfig, cmake and static libs from the app bundle
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@APPLICATION_NAME@.app/Contents/Frameworks/pkgconfig/")
 	execute_process(COMMAND ${CMAKE_COMMAND} -E remove_directory "${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@APPLICATION_NAME@.app/Contents/Frameworks/cmake/")
-	remove_file("${CPACK_TEMPORARY_INSTALL_DIRECTORY}/*.a")
-	remove_file("${CPACK_TEMPORARY_INSTALL_DIRECTORY}/*.pc")
+	execute_process(COMMAND sh -c "rm -f \"${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@APPLICATION_NAME@.app/Contents/Frameworks/\"*.a")
+	execute_process(COMMAND sh -c "rm -f \"${CPACK_TEMPORARY_INSTALL_DIRECTORY}/@APPLICATION_NAME@.app/Contents/Frameworks/\"*.pc")
 	
 	# Build dSYM files into package
 	# deploy qt dependencies
