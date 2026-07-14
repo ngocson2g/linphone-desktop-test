@@ -2336,6 +2336,72 @@ void Utils::forceCrash() {
 	raise(SIGSEGV);
 }
 
+// RFC 4180 compliant CSV field parser - handles quoted fields, embedded commas,
+// multiline values, and escaped double-quotes ("" → ")
+static QList<QStringList> parseCsvRows(const QString &csvContent) {
+	QList<QStringList> rows;
+	QStringList currentRow;
+	QString currentField;
+	bool inQuotes = false;
+	int i = 0;
+	int len = csvContent.length();
+
+	while (i < len) {
+		QChar ch = csvContent[i];
+
+		if (inQuotes) {
+			if (ch == '"') {
+				// Check for escaped quote ""
+				if (i + 1 < len && csvContent[i + 1] == '"') {
+					currentField += '"';
+					i += 2;
+				} else {
+					// End of quoted field
+					inQuotes = false;
+					i++;
+				}
+			} else {
+				currentField += ch;
+				i++;
+			}
+		} else {
+			if (ch == '"') {
+				inQuotes = true;
+				i++;
+			} else if (ch == ',') {
+				currentRow.append(currentField.trimmed());
+				currentField.clear();
+				i++;
+			} else if (ch == '\r') {
+				// Handle \r\n or \r alone as row end
+				currentRow.append(currentField.trimmed());
+				currentField.clear();
+				rows.append(currentRow);
+				currentRow.clear();
+				i++;
+				if (i < len && csvContent[i] == '\n') i++;
+			} else if (ch == '\n') {
+				currentRow.append(currentField.trimmed());
+				currentField.clear();
+				rows.append(currentRow);
+				currentRow.clear();
+				i++;
+			} else {
+				currentField += ch;
+				i++;
+			}
+		}
+	}
+
+	// Don't forget the last field/row
+	if (!currentField.isEmpty() || !currentRow.isEmpty()) {
+		currentRow.append(currentField.trimmed());
+		rows.append(currentRow);
+	}
+
+	return rows;
+}
+
 QVariantMap Utils::importContactsFromCsv(const QString &filePath) {
 	QVariantMap result;
 	QString actualPath = filePath;
@@ -2369,55 +2435,100 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 		return result;
 	}
 
-	QStringList lines = csvContent.split(QRegularExpression("[\r\n]"), Qt::SkipEmptyParts);
+	QList<QStringList> rows = parseCsvRows(csvContent);
+	if (rows.isEmpty()) {
+		result["error"] = "CSV file is empty";
+		return result;
+	}
 
-	bool firstLine = true;
-	for (const QString &rawLine : lines) {
-		QString line = rawLine.trimmed();
-		if (line.isEmpty()) continue;
+	// Auto-detect column mapping from header row
+	int nameCol = -1, phoneCol = -1, noteCol = -1;
+	bool hasHeader = false;
 
-		QStringList parts = line.split(',');
-		
-		QString phone, name, note;
-		if (parts.size() >= 1) phone = parts[0].trimmed();
-		if (parts.size() >= 2) name = parts[1].trimmed();
-		if (parts.size() >= 3) {
-			note = parts.mid(2).join(",").trimmed();
-		}
-		
-		if (phone.startsWith("\"") && phone.endsWith("\"")) phone = phone.mid(1, phone.length()-2);
-		if (name.startsWith("\"") && name.endsWith("\"")) name = name.mid(1, name.length()-2);
-		if (note.startsWith("\"") && note.endsWith("\"")) note = note.mid(1, note.length()-2);
-
-		if (firstLine) {
-			firstLine = false;
-			if (phone.toLower().contains("phone") || phone.toLower().contains("number") || phone.toLower().contains("sip")) {
-				continue;
+	QStringList firstRow = rows.first();
+	for (int c = 0; c < firstRow.size(); c++) {
+		// Strip all non-letter/non-space characters (BOM, zero-width chars, etc.) then uppercase
+		QString raw = firstRow[c].trimmed();
+		QString header;
+		for (int i = 0; i < raw.length(); i++) {
+			QChar ch = raw[i];
+			if (ch.isLetter() || ch.isSpace() || ch == '_') {
+				header += ch;
 			}
 		}
+		header = header.trimmed().toUpper();
 
-		if (phone.isEmpty()) continue;
+		if (header == "NAME" || header == "TEN" || header == "HO TEN" || header.contains("HỌ TÊN") || header.contains("FULL NAME")) {
+			nameCol = c;
+			hasHeader = true;
+		} else if (header.contains("PHONE") || header == "SO" || header.contains("NUMBER") || header.contains("SIP") || header.contains("SDT") || header.contains("DIEN THOAI")) {
+			phoneCol = c;
+			hasHeader = true;
+		} else if (header.contains("NOTE") || header.contains("GHI CHU") || header.contains("MEMO") || header.contains("COMMENT")) {
+			noteCol = c;
+			hasHeader = true;
+		}
+
+	}
+
+
+	// If no header detected, assume default order: Name(0), Phone(1), Note(2)
+	if (!hasHeader) {
+		nameCol = 0;
+		phoneCol = 1;
+		noteCol = 2;
+	}
+
+	// If header was detected but phone column not found, cannot proceed
+	if (hasHeader && phoneCol == -1) {
+		result["error"] = "Cannot detect Phone column in CSV header";
+		return result;
+	}
+
+	int startRow = hasHeader ? 1 : 0;
+
+	for (int r = startRow; r < rows.size(); r++) {
+		const QStringList &fields = rows[r];
+		if (fields.isEmpty()) continue;
+
+		// Check if this is a completely empty row
+		bool allEmpty = true;
+		for (const QString &f : fields) {
+			if (!f.trimmed().isEmpty()) { allEmpty = false; break; }
+		}
+		if (allEmpty) continue;
+
+		QString name, phone, note;
+		if (nameCol >= 0 && nameCol < fields.size()) name = fields[nameCol].trimmed();
+		if (phoneCol >= 0 && phoneCol < fields.size()) phone = fields[phoneCol].trimmed();
+		if (noteCol >= 0 && noteCol < fields.size()) note = fields[noteCol].trimmed();
+
+		// Clean phone number - remove spaces and dashes for normalization
+		QString cleanPhone = phone;
+		cleanPhone.remove(' ').remove('-');
+
+		if (phone.isEmpty() && cleanPhone.isEmpty()) continue;
 
 		try {
 			std::shared_ptr<linphone::Friend> existingFriend = nullptr;
 			std::shared_ptr<linphone::Address> linphoneAddr = nullptr;
-			if (phone.contains("@") || phone.startsWith("sip:")) {
-				linphoneAddr = ToolModel::interpretUrl(phone);
+			if (cleanPhone.contains("@") || cleanPhone.startsWith("sip:")) {
+				linphoneAddr = ToolModel::interpretUrl(cleanPhone);
 			}
-			
+
 			if (linphoneAddr) {
 				existingFriend = appFriends->findFriendByAddress(linphoneAddr);
 			}
 			if (!existingFriend) {
-				existingFriend = appFriends->findFriendByPhoneNumber(Utils::appStringToCoreString(phone));
+				existingFriend = appFriends->findFriendByPhoneNumber(Utils::appStringToCoreString(cleanPhone));
 			}
 
 			if (existingFriend) {
 				duplicateCount++;
 				duplicateNames.append(name.isEmpty() ? phone : name);
-				
+
 				existingFriend->edit();
-				
+
 				bool createdVcard = false;
 				auto vcard = existingFriend->getVcard();
 				if (!vcard) {
@@ -2430,7 +2541,7 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 						vcard->setFamilyName(Utils::appStringToCoreString(getFamilyNameFromFullName(name)));
 						vcard->setFullName(Utils::appStringToCoreString(name));
 					}
-					
+
 					if (!note.isEmpty()) {
 						QString currentNote;
 						auto notes = vcard->getExtendedPropertiesValuesByName("X-NOTE");
@@ -2452,13 +2563,13 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 						vcard->addExtendedProperty("X-NOTE", Utils::appStringToCoreString(escapedNote));
 					}
 				}
-				
+
 				existingFriend->done();
 			} else {
 				auto newFriend = core->createFriend();
 				QString finalName = name.isEmpty() ? phone : name;
 				newFriend->setName(Utils::appStringToCoreString(finalName));
-				
+
 				bool createdVcard = false;
 				auto vcard = newFriend->getVcard();
 				if (!vcard) {
@@ -2469,7 +2580,7 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 					vcard->setGivenName(Utils::appStringToCoreString(getGivenNameFromFullName(finalName)));
 					vcard->setFamilyName(Utils::appStringToCoreString(getFamilyNameFromFullName(finalName)));
 					// setFullName is already handled safely by newFriend->setName()
-					
+
 					vcard->removeExtentedPropertiesByName("X-NOTE");
 					if (!note.isEmpty()) {
 						QString escapedNote = note;
@@ -2477,15 +2588,15 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 						vcard->addExtendedProperty("X-NOTE", Utils::appStringToCoreString(escapedNote));
 					}
 				}
-				
-				auto phoneNumber = linphone::Factory::get()->createFriendPhoneNumber(Utils::appStringToCoreString(phone), "");
+
+				auto phoneNumber = linphone::Factory::get()->createFriendPhoneNumber(Utils::appStringToCoreString(cleanPhone), "");
 				if (phoneNumber) {
 					newFriend->addPhoneNumberWithLabel(phoneNumber);
 				}
 				if (linphoneAddr) {
 					newFriend->addAddress(linphoneAddr);
 				}
-				
+
 				bool created = (appFriends->addFriend(newFriend) == linphone::FriendList::Status::OK);
 				if (created) {
 					newFriend->done();
@@ -2496,7 +2607,7 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 			qWarning() << "Exception during CSV import for phone" << phone << ":" << e.what();
 		}
 	}
-	
+
 	if (successCount > 0 || duplicateCount > 0) {
 		appFriends->updateSubscriptions();
 		if (appFriends->getType() == linphone::FriendList::Type::CardDAV) {
@@ -2509,3 +2620,4 @@ QVariantMap Utils::importContactsFromCsvText(const QString &csvContent, const QS
 	result["duplicateNames"] = duplicateNames;
 	return result;
 }
+
