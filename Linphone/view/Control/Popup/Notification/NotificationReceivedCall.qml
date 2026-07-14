@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Linphone
 import UtilsCpp
 import 'qrc:/qt/qml/Linphone/view/Style/buttonStyle.js' as ButtonStyle
@@ -17,6 +18,9 @@ Notification {
 	
 	readonly property var call: notificationData && notificationData.call
 	readonly property var displayName: notificationData && notificationData.displayName
+	property var contactObj: call ? UtilsCpp.findFriendByAddress(call.core.remoteAddress) : null
+	property var contact: contactObj && contactObj.value || null
+	property string noteText: contact ? contact.core.vcardNote : ""
 	property var state: call.core.state
 	property var status: call.core.status
 	property var conference: call.core.conference
@@ -98,6 +102,33 @@ Notification {
 							font {
                                 pixelSize: Utils.getSizeWithScreenRatio(14)
                                 weight: Utils.getSizeWithScreenRatio(500)
+							}
+						}
+					}
+				}
+				Rectangle {
+					Layout.alignment: Qt.AlignHCenter
+					Layout.preferredWidth: Math.min(parent.width - Utils.getSizeWithScreenRatio(40), Utils.getSizeWithScreenRatio(400))
+					visible: mainItem.noteText.length > 0
+					Layout.preferredHeight: Math.min(Utils.getSizeWithScreenRatio(150), noteTextItem.implicitHeight + Utils.getSizeWithScreenRatio(20))
+					color: "#22000000" // Subtle dark background for the note
+					radius: Utils.getSizeWithScreenRatio(10)
+					clip: true
+					
+					ScrollView {
+						anchors.fill: parent
+						anchors.margins: Utils.getSizeWithScreenRatio(10)
+						clip: true
+						
+						Text {
+							id: noteTextItem
+							width: parent.width
+							text: "Note :\n" + mainItem.noteText
+							wrapMode: Text.Wrap
+							color: DefaultStyle.grey_0
+							font {
+								pixelSize: Typography.p1.pixelSize
+								weight: Typography.p1.weight
 							}
 						}
 					}

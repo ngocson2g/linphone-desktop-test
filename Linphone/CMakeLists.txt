@@ -30,6 +30,9 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 find_package(Qt6 REQUIRED COMPONENTS ${QT_PACKAGES})
 find_package(Qt6 REQUIRED COMPONENTS LinguistTools)
 
+if(MSVC)
+	add_compile_options("/utf-8")
+endif()
 if(NOT WIN32)
 	find_package(X11)
 endif()
@@ -41,6 +44,9 @@ endif()
 ################################################################
 #						CONFIGS
 ################################################################
+if(MSVC)
+	add_compile_options("/utf-8")
+endif()
 if(NOT WIN32)
 	add_compile_options(-Werror=deprecated-declarations)
 endif()
