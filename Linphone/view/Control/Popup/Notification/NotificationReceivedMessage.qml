@@ -52,7 +52,7 @@ Notification {
 					source: AppIcons.logo
 				}
 				Text {
-					text: "Linphone"
+					text: "Zphone"
 					color: DefaultStyle.grey_0
 					font {
                         pixelSize: Utils.getSizeWithScreenRatio(12)
